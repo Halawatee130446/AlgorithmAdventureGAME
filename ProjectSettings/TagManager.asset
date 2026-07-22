@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Ground
+  - Trap
+  - Treasure
+  - Knowledge
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - Ground
+  - Background
+  - OverBackground
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Sky
+    uniqueID: 1627217979
+    locked: 0
+  - name: Background
+    uniqueID: 3712317795
+    locked: 0
+  - name: OverBackground
+    uniqueID: 31225283
+    locked: 0
+  - name: Terrain
+    uniqueID: 1609617215
+    locked: 0
+  - name: Trap
+    uniqueID: 165576955
+    locked: 0
+  - name: Question
+    uniqueID: 3436649347
+    locked: 0
+  - name: treasureBackground
+    uniqueID: 4238486501
+    locked: 0
+  - name: fontGround
+    uniqueID: 2689905115
+    locked: 0
+  - name: treasure
+    uniqueID: 1347903913
+    locked: 0
+  - name: Player
+    uniqueID: 358220983
+    locked: 0
