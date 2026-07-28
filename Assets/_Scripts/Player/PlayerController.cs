@@ -82,16 +82,17 @@ public class PlayerController : MonoBehaviour
     // ---------------------------------------------------
     // 3. เพิ่มฟังก์ชันสำหรับรับแรงกระเด็น
     // ---------------------------------------------------
-    public void KnockbackLock()
+    // เปลี่ยนให้ฟังก์ชันรับค่าเวลา (duration) ได้
+    public void KnockbackLock(float duration)
     {
-        StartCoroutine(KnockbackRoutine());
+        StartCoroutine(KnockbackRoutine(duration));
     }
 
-    private IEnumerator KnockbackRoutine()
+    private IEnumerator KnockbackRoutine(float duration)
     {
-        canMove = false; // ปลดการควบคุม
-        yield return new WaitForSeconds(0.3f); // รอ 0.3 วินาที (ปรับให้น้อยหรือมากได้ตามความลื่นไหล)
-        canMove = true; // คืนการควบคุมให้ผู้เล่น
+        canMove = false; // ปลดการควบคุม (ห้ามขยับ)
+        yield return new WaitForSeconds(duration); // รอเวลาตามที่ส่งมา (ให้เท่ากับแอนิเมชันเจ็บ)
+        canMove = true; // คืนการควบคุม
     }
 }
 

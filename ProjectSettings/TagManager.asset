@@ -10,6 +10,7 @@ TagManager:
   - Knowledge
   - Monster
   - SafeSpot
+  - Ammo
   layers:
   - Default
   - TransparentFX

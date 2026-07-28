@@ -37,21 +37,59 @@ public class Trap_Death : MonoBehaviour
         }
         else if (collision.gameObject.CompareTag("Monster"))
         {
-            bool isDead = healthSystem.TakeDamage(1);
-            if (isDead)
-            {
-                Die();
-            }
-            else
-            {
-                anim.SetTrigger("hurt");
-                Knockback(collision.transform);
+            // -----------------------------------------------------------------
+            // ระบบเช็คการเหยียบ (Stomp Detection) ที่แม่นยำขึ้น
+            // -----------------------------------------------------------------
+            bool isStomping = false;
 
-                // ชนมอนสเตอร์ กระเด็นเสร็จให้เริ่มวิบวับทันที 1.5 วินาที
-                healthSystem.StartFlashingAndUnlock();
+            // 1. วนลูปเช็คจุดสัมผัส "ทุกจุด" (แก้บั๊กโดนมุมแล้วตีความผิด)
+            foreach (ContactPoint2D point in collision.contacts)
+            {
+                // ลดเกณฑ์จาก 0.5 เหลือ 0.3 เพื่อให้เหยียบเฉียงๆ ก็ยังนับว่าโดนหัว
+                if (point.normal.y > 0.3f)
+                {
+                    isStomping = true;
+                    break;
+                }
+            }
+
+            // 2. กันเหนียวเพิ่ม: ถ้าจุดศูนย์กลางกบเขียว อยู่สูงกว่ามอนสเตอร์ ก็ให้ถือว่าเหยียบหัวแน่ๆ
+            if (transform.position.y > collision.transform.position.y + 0.3f)
+            {
+                isStomping = true;
+            }
+
+            // -----------------------------------------------------------------
+
+            if (isStomping)
+            {
+                // 1. ใส่แรงกระโดดให้กบเขียวเด้งขึ้น 
+                rb.velocity = new Vector2(rb.velocity.x, 12f);
+
+                // 2. เรียกสคริปต์ลดเลือดมอนสเตอร์
+                MonsterHealth monsterHealth = collision.gameObject.GetComponent<MonsterHealth>();
+                if (monsterHealth != null)
+                {
+                    monsterHealth.TakeDamage();
+                }
+            }
+            else // ถ้าไม่ได้ชนจากด้านบน (ชนด้านข้าง/ล่าง) กบเขียวจะเจ็บตามปกติ
+            {
+                bool isDead = healthSystem.TakeDamage(1);
+                if (isDead)
+                {
+                    Die();
+                }
+                else
+                {
+                    anim.SetTrigger("hurt");
+                    Knockback(collision.transform);
+                    healthSystem.StartFlashingAndUnlock();
+                }
             }
         }
     }
+
 
     private IEnumerator RespawnAfterDelay()
     {
@@ -88,7 +126,7 @@ public class Trap_Death : MonoBehaviour
         rb.bodyType = RigidbodyType2D.Dynamic;
         GetComponent<PlayerController>().canMove = true;
 
-        // 6. วาร์ปเสร็จแล้ว ค่อยเริ่มกระพริบวิบวับป้องกันตัว 1.5 วินาที!
+        // 6. วาร์ปเสร็จแล้ว ค่อยเริ่มกระพริบวิบวับป้องกันตัว 2 วินาที!
         healthSystem.StartFlashingAndUnlock();
     }
 
@@ -100,7 +138,9 @@ public class Trap_Death : MonoBehaviour
         rb.velocity = Vector2.zero;
         rb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
 
-        GetComponent<PlayerController>().KnockbackLock();
+        // ส่งเวลาไป 0.7f (ปรับตัวเลขนี้ให้เท่ากับความยาวแอนิเมชัน PlayerHurt ของคุณ)
+        // เพื่อให้ตัวละครห้ามขยับจนกว่าแอนิเมชันจะเล่นจบ
+        GetComponent<PlayerController>().KnockbackLock(0.7f);
     }
 
     private void Die()

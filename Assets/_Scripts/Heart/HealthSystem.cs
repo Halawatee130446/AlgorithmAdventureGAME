@@ -67,8 +67,8 @@ public class HealthSystem : MonoBehaviour
     {
         float elapsedTime = 0f;
 
-        // วิบวับเป็นเวลา 1.5 วินาที
-        while (elapsedTime < 1.5f)
+        // วิบวับเป็นเวลา 2 วินาที
+        while (elapsedTime < 2f)
         {
             spriteRenderer.color = new Color(1f, 1f, 1f, 0.5f);
             yield return new WaitForSeconds(0.1f);
