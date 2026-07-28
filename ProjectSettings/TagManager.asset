@@ -9,6 +9,7 @@ TagManager:
   - Treasure
   - Knowledge
   - Monster
+  - SafeSpot
   layers:
   - Default
   - TransparentFX

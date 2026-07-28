@@ -2,6 +2,105 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public class PlayerController : MonoBehaviour
+{
+    private Rigidbody2D rb;
+    private BoxCollider2D coll;
+    private SpriteRenderer sprite;
+    private Animator anim;
+    [SerializeField] private LayerMask jumpbleGround;
+    private float dirX = 0f;
+    [SerializeField] private float moveSpeed = 7f;
+    [SerializeField] private float jumpForce = 9.5f;
+    private enum MovementState { idle, running, jumping, falling }
+    [SerializeField] private AudioSource jumpSoundEffect;
+
+    // 1. เพิ่มตัวแปรเช็คว่าตอนนี้สามารถเดินได้ไหม
+    public bool canMove = true;
+
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        coll = GetComponent<BoxCollider2D>();
+        sprite = GetComponent<SpriteRenderer>();
+        anim = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        // 2. ถ้าขยับไม่ได้ (กำลังกระเด็น) ให้ข้ามคำสั่งเกี่ยวกับการควบคุมด้านล่างไปเลย
+        if (!canMove) return;
+
+        dirX = Input.GetAxisRaw("Horizontal");
+        rb.velocity = new Vector2(dirX * moveSpeed, rb.velocity.y);
+
+        if (Input.GetButtonDown("Jump") && IsGrounded())
+        {
+            //jumpSoundEffect.Play(); 
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        }
+
+        UpdateAnimationState();
+    }
+
+    private void UpdateAnimationState()
+    {
+        MovementState state;
+
+        if (dirX > 0f)
+        {
+            state = MovementState.running;
+            sprite.flipX = false;
+        }
+        else if (dirX < 0f)
+        {
+            state = MovementState.running;
+            sprite.flipX = true;
+        }
+        else
+        {
+            state = MovementState.idle;
+        }
+
+        if (rb.velocity.y > .1f)
+        {
+            state = MovementState.jumping;
+        }
+        else if (rb.velocity.y < -.1f)
+        {
+            state = MovementState.falling;
+        }
+
+        anim.SetInteger("state", (int)state);
+    }
+
+    private bool IsGrounded()
+    {
+        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, .1f, jumpbleGround);
+    }
+
+    // ---------------------------------------------------
+    // 3. เพิ่มฟังก์ชันสำหรับรับแรงกระเด็น
+    // ---------------------------------------------------
+    public void KnockbackLock()
+    {
+        StartCoroutine(KnockbackRoutine());
+    }
+
+    private IEnumerator KnockbackRoutine()
+    {
+        canMove = false; // ปลดการควบคุม
+        yield return new WaitForSeconds(0.3f); // รอ 0.3 วินาที (ปรับให้น้อยหรือมากได้ตามความลื่นไหล)
+        canMove = true; // คืนการควบคุมให้ผู้เล่น
+    }
+}
+
+/* เวอร์เก่าตอนยังไม่เพิ่มการกระเด็น
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
 public class PlayerController : MonoBehaviour // สคริปต์ควบคุมการเคลื่อนที่ การกระโดด และ Animation ของผู้เล่น
 {
     private Rigidbody2D rb; //ประกาศตัวแปร rb มีชนิดเป็น Rigidbody2D (ใช้ควบคุมการเคลื่อนที่ด้วยระบบฟิสิกส์)
@@ -92,3 +191,5 @@ public class PlayerController : MonoBehaviour // สคริปต์ควบ�
         );
     }
 }
+
+*/
