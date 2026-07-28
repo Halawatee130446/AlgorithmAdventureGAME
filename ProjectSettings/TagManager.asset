@@ -8,6 +8,7 @@ TagManager:
   - Trap
   - Treasure
   - Knowledge
+  - Monster
   layers:
   - Default
   - TransparentFX
@@ -72,6 +73,6 @@ TagManager:
   - name: treasure
     uniqueID: 1347903913
     locked: 0
-  - name: Player
+  - name: Player&Monster
     uniqueID: 358220983
     locked: 0
