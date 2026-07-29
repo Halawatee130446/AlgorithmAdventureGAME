@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class Treasure_Act : MonoBehaviour
 {
+    [Header("Save Settings")]
+    public string chestID = "Chest_1";
     private Animator anim;
 
     private bool playerInside = false;
@@ -32,13 +34,27 @@ public class Treasure_Act : MonoBehaviour
         if (notificationPanel != null) notificationPanel.SetActive(false);
         if (KnowledgePanel != null) KnowledgePanel.SetActive(false);
 
-        // --- วนลูปซ่อนจุดตอบคำถาม "ทั้งหมด" ใน Array ตอนเริ่มเกม ---
-        foreach (GameObject qp in questionMarkPoints)
+        // เช็คว่าเคยเปิดหรือยัง?
+        if (PlayerPrefs.GetInt(chestID + "_isOpened", 0) == 1)
         {
-            if (qp != null) qp.SetActive(false);
+            isOpened = true;
+
+            // --- 1. บังคับเล่นท่า Opened ทันที (อ้างอิงชื่อจากรูป Animator ของคุณ) ---
+            anim.Play("Opened");
+            anim.SetInteger("treasureState", 4); // ตั้งค่า state เผื่อไว้ตอนผู้เล่นเดินเข้าออก
+
+            // --- 2. เรียกใช้ฟังก์ชันโชว์จุดคำถาม ---
+            ShowQuestionMarks();
+        }
+        else
+        {
+            // ถ้ายังไม่เคยเปิด ก็ซ่อนตามปกติ
+            foreach (GameObject qp in questionMarkPoints)
+            {
+                if (qp != null) qp.SetActive(false);
+            }
         }
     }
-
     void Update()
     {
         if (playerInside)
@@ -60,16 +76,16 @@ public class Treasure_Act : MonoBehaviour
         isOpened = true;
         anim.SetInteger("treasureState", 3);
 
+        PlayerPrefs.SetInt(chestID + "_isOpened", 1);
+        PlayerPrefs.Save();
+
         if (hintText != null)
         {
             hintText.text = "Press R to Read!";
         }
 
-        // --- วนลูปแสดงจุดตอบคำถาม "ทั้งหมด" เมื่อเปิดหีบ ---
-        foreach (GameObject qp in questionMarkPoints)
-        {
-            if (qp != null) qp.SetActive(true);
-        }
+        // เรียกใช้ฟังก์ชันโชว์จุดคำถาม
+        ShowQuestionMarks();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -133,6 +149,36 @@ public class Treasure_Act : MonoBehaviour
     {
         if (playerMovement != null) playerMovement.enabled = true;
         if (playerShooting != null) playerShooting.enabled = true;
+    }
+
+    // --- 3. ฟังก์ชันใหม่: เอาไว้กรองว่าจุดไหนตอบถูกแล้วให้ซ่อน จุดไหนยังไม่ตอบให้โชว์ ---
+    private void ShowQuestionMarks()
+    {
+        foreach (GameObject qp in questionMarkPoints)
+        {
+            if (qp != null)
+            {
+                // ดึงสคริปต์ QuestionPoint มาอ่านค่า ID
+                QuestionPoint qScript = qp.GetComponent<QuestionPoint>();
+
+                if (qScript != null)
+                {
+                    // เช็คว่าข้อนี้เคยตอบถูก (Passed) หรือยัง?
+                    if (PlayerPrefs.GetInt(qScript.questionID + "_Passed", 0) == 0)
+                    {
+                        qp.SetActive(true); // ถ้ายังไม่ผ่าน ให้โชว์
+                    }
+                    else
+                    {
+                        qp.SetActive(false); // ถ้าผ่านแล้ว ให้ซ่อนถาวร
+                    }
+                }
+                else
+                {
+                    qp.SetActive(true); // เผื่อลืมใส่สคริปต์ไว้
+                }
+            }
+        }
     }
 }
 

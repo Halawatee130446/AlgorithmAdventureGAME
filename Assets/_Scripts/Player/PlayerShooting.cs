@@ -9,7 +9,7 @@ public class PlayerShooting : MonoBehaviour
     [SerializeField] private Transform firePoint; // ลาก FirePoint มาใส่
 
     [SerializeField] private int maxAmmo = 15; // กระสุนเริ่มต้น
-    private int currentAmmo;
+    public int currentAmmo;
 
     [SerializeField] private Text ammoText; // ลาก UI AmmoText มาใส่
 
@@ -17,8 +17,17 @@ public class PlayerShooting : MonoBehaviour
 
     private void Start()
     {
-        currentAmmo = maxAmmo;
+
         playerSprite = GetComponent<SpriteRenderer>();
+
+        if (GameManager.Instance != null && GameManager.Instance.isReturningFromMiniGame)
+        {
+            currentAmmo = GameManager.Instance.savedAmmo; // ดึงกระสุนเดิมมา
+        }
+        else
+        {
+            currentAmmo = maxAmmo; // เริ่มเกมใหม่ กระสุนเต็ม
+        }
 
         UpdateAmmoUI();
     }

@@ -1,21 +1,64 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    // Singleton — ทำให้วัตถุอื่นเรียกใช้ GameManager ได้จากทุกที่
     public static GameManager Instance;
 
-    // ตัวแปรเก็บข้อมูลหลักของเกม
-    public int coins = 0;
-    public int currentHP = 3;
-    public int maxHP = 3;
-    public float timeRemaining = 120f; // เวลา 2 นาทีต่อด่าน
+    [Header("ระบบเซฟดาว")]
+    public int totalStars = 0;
 
-    void Awake()
+    [Header("ข้อมูลชั่วคราวตอนย้าย Scene")]
+    public bool isReturningFromMiniGame = false;
+    public Vector2 returnPosition;
+    public int savedHealth;
+    public int savedAmmo;
+
+    private void Awake()
     {
-        // ตั้งค่า Singleton
-        Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+
+            // ล้างเซฟเฉพาะตอนเปิดเกมเล่นครั้งแรก
+            PlayerPrefs.DeleteAll();
+            LoadGameData();
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void AddStar()
+    {
+        totalStars++;
+        PlayerPrefs.SetInt("TotalStars", totalStars);
+        PlayerPrefs.Save();
+    }
+
+    private void LoadGameData()
+    {
+        totalStars = PlayerPrefs.GetInt("TotalStars", 0);
+    }
+
+    // ฟังก์ชันนี้จะถูกเรียกตอนที่กบเขียวตาย
+    public void ResetStateOnDeath()
+    {
+        // 1. ปิดสวิตช์วาร์ปกลับจากมินิเกมให้ชัวร์ 100%
+        isReturningFromMiniGame = false;
+
+        // 2. แบ็คอัพดาวไว้ก่อน (เวลาตายดาวจะได้ไม่หาย)
+        int keepStars = totalStars;
+
+        // 3. ล้างเซฟทั้งหมด (รีเซ็ตหีบ, มอนสเตอร์, มินิเกม)
+        PlayerPrefs.DeleteAll();
+
+        // 4. คืนค่าดาวกลับเข้าไป
+        totalStars = keepStars;
+        PlayerPrefs.SetInt("TotalStars", totalStars);
+        PlayerPrefs.Save();
+
+        Debug.Log("ล้างข้อมูลตอนตายเรียบร้อย! เริ่มด่านใหม่แบบคลีนๆ");
     }
 }

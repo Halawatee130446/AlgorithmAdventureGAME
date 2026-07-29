@@ -36,6 +36,12 @@ public class PlayerController : MonoBehaviour
             PlayerPrefs.SetInt("IsReturningFromMiniGame", 0);
             PlayerPrefs.Save();
         }
+
+        if (GameManager.Instance != null && GameManager.Instance.isReturningFromMiniGame)
+        {
+            // ดึงพิกัดที่ฝากไว้กลับมาใช้งาน
+            transform.position = GameManager.Instance.returnPosition;
+        }
     }
 
     private void Update()

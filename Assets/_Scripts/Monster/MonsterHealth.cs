@@ -17,6 +17,13 @@ public class MonsterHealth : MonoBehaviour
 
     private void Start()
     {
+        // ตั้งชื่อมอนสเตอร์แต่ละตัวให้ไม่ซ้ำกันใน Inspector (เช่น Mob1, Mob2)
+        if (PlayerPrefs.GetInt(gameObject.name + "_Dead", 0) == 1)
+        {
+            Destroy(gameObject); // ถ้าเคยตาย ก็ลบทิ้งไปเลยตั้งแต่เริ่มซีน
+            return;
+        }
+
         currentHealth = maxHealth;
         spriteRenderer = GetComponent<SpriteRenderer>();
         coll = GetComponent<Collider2D>();

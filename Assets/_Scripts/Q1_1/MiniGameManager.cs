@@ -8,7 +8,7 @@ public class MiniGameManager : MonoBehaviour
     [Header("Game Settings")]
     public string mainSceneName = "MainScene";
     public string questionID = "Q1_1";
-    public int totalBoxesToSort = 3; // จำนวนกล่องทั้งหมดที่ต้องจัดให้ถูก (เช่น A,B,C มี 3 กล่อง)
+    public int totalBoxesToSort = 3;
 
     [Header("Timer Settings")]
     public float timeLimit = 15f;
@@ -16,21 +16,20 @@ public class MiniGameManager : MonoBehaviour
 
     private float timer;
     private bool isGameOver = false;
-    private bool isFirstTry = true;
 
-    // ตัวแปรนับว่าตอนนี้วางถูกกี่กล่องแล้ว
     private int correctlyPlacedBoxes = 0;
+    private int attempts; // ตัวแปรนับจำนวนครั้งที่เข้าเล่นข้อนี้
 
     void Start()
     {
         timer = timeLimit;
 
-        if (PlayerPrefs.GetInt(questionID + "_Played", 0) == 1)
-        {
-            isFirstTry = false;
-        }
+        // ดึงจำนวนครั้งที่เคยเล่นข้อนี้มา ถ้าไม่เคยเล่น ค่าจะเป็น 0
+        attempts = PlayerPrefs.GetInt(questionID + "_Attempts", 0);
 
-        PlayerPrefs.SetInt(questionID + "_Played", 1);
+        // บวก 1 แล้วเซฟกลับลงไป (เพื่อให้รู้ว่ากดเข้ามาเล่นแล้วนะ)
+        attempts++;
+        PlayerPrefs.SetInt(questionID + "_Attempts", attempts);
         PlayerPrefs.Save();
     }
 
@@ -47,18 +46,16 @@ public class MiniGameManager : MonoBehaviour
 
         if (timer <= 0)
         {
-            ProcessGameEnd(false); // เวลาหมด = แพ้
+            ProcessGameEnd(false);
         }
     }
 
-    // ฟังก์ชันนี้ DropZone จะเป็นคนเรียกเมื่อกล่องเข้าโซนถูก
     public void AddCorrectlyPlacedBox()
     {
         correctlyPlacedBoxes++;
         CheckWinCondition();
     }
 
-    // ฟังก์ชันนี้ DropZone จะเป็นคนเรียกเมื่อกล่องหลุดออกจากโซน
     public void RemoveCorrectlyPlacedBox()
     {
         correctlyPlacedBoxes--;
@@ -66,7 +63,6 @@ public class MiniGameManager : MonoBehaviour
 
     private void CheckWinCondition()
     {
-        // ถ้ายอดกล่องที่วางถูก เท่ากับยอดกล่องทั้งหมดที่ต้องจัด แปลว่าชนะ!
         if (correctlyPlacedBoxes >= totalBoxesToSort)
         {
             ProcessGameEnd(true);
@@ -80,22 +76,25 @@ public class MiniGameManager : MonoBehaviour
 
         if (isWin)
         {
-            Debug.Log("ชนะ! เรียงกล่องถูกหมดแล้ว");
-            PlayerPrefs.SetInt(questionID + "_Passed", 1);
+            Debug.Log("ชนะมินิเกม!");
 
-            if (isFirstTry)
+            // เช็คว่า "เล่นครั้งแรก" (attempts == 1) และ "ยังไม่เคยได้ดาวจากข้อนี้" ใช่ไหม?
+            if (attempts == 1 && PlayerPrefs.GetInt(questionID + "_Passed", 0) == 0)
             {
-                int currentStars = PlayerPrefs.GetInt("TotalStars", 0);
-                PlayerPrefs.SetInt("TotalStars", currentStars + 1);
-                Debug.Log("ได้ดาว 1 ดวง!");
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.AddStar();
+                }
             }
+
+            PlayerPrefs.SetInt(questionID + "_Passed", 1);
+            PlayerPrefs.Save();
         }
         else
         {
-            Debug.Log("แพ้! หมดเวลาก่อน");
+            Debug.Log("แพ้มินิเกม!");
         }
 
-        PlayerPrefs.Save();
         StartCoroutine(ReturnToMainSceneDelay());
     }
 

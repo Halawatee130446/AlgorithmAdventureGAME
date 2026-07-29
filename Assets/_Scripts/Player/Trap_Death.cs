@@ -153,6 +153,11 @@ public class Trap_Death : MonoBehaviour
     private void RestartLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ResetStateOnDeath();
+        }
     }
 }
 

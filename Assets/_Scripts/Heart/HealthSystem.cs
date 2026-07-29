@@ -5,7 +5,8 @@ using UnityEngine;
 public class HealthSystem : MonoBehaviour
 {
     [SerializeField] private int baseHealth = 4;
-    private int currentHealth;
+    // ลบ public int maxHealth = 4; ออกไปได้เลยครับ จะได้ไม่ซ้ำซ้อนกัน
+    public int currentHealth;
 
     [SerializeField] private HealthUI healthUI;
     [SerializeField] private bool useExtraHeartBuff = false;
@@ -17,15 +18,26 @@ public class HealthSystem : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
 
-        if (useExtraHeartBuff)
+        // 1. เช็คก่อนว่าเพิ่งกลับมาจากมินิเกมหรือเปล่า?
+        if (GameManager.Instance != null && GameManager.Instance.isReturningFromMiniGame)
         {
-            currentHealth = baseHealth + 1;
+            // ถ้าใช่ ให้ดึงเลือดเก่าที่ฝากไว้มาใช้เลย
+            currentHealth = GameManager.Instance.savedHealth;
         }
         else
         {
-            currentHealth = baseHealth;
+            // 2. ถ้าไม่ใช่ (แปลว่าเริ่มด่านเล่นใหม่ปกติ) ค่อยคำนวณเลือดแบบปกติ
+            if (useExtraHeartBuff)
+            {
+                currentHealth = baseHealth + 1;
+            }
+            else
+            {
+                currentHealth = baseHealth;
+            }
         }
 
+        // 3. เมื่อได้ค่า currentHealth ที่ถูกต้องแล้ว ค่อยสั่งอัปเดต UI รูปหัวใจ 
         if (healthUI != null)
         {
             healthUI.UpdateHearts(currentHealth);
@@ -82,4 +94,3 @@ public class HealthSystem : MonoBehaviour
         isInvincible = false;
     }
 }
-

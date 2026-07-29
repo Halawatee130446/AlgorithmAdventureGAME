@@ -7,10 +7,15 @@ public class QuestionPoint : MonoBehaviour
 {
     [Header("Scene Destination")]
     [SerializeField] private string sceneToLoad;
+    [Header("Save Settings")]
+    public string questionID = "Q1_1"; // ต้องตั้งให้ตรงกับ questionID ใน MiniGameManager ของด่านนั้นๆ นะครับ
 
     [Header("UI Settings")]
     [SerializeField] private GameObject notificationPanel;
     [SerializeField] private UnityEngine.UI.Text hintText;
+
+    // --- เพิ่มบรรทัดนี้เข้ามา ---
+
 
     private bool playerInside = false;
 
@@ -37,22 +42,21 @@ public class QuestionPoint : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            // --- โค้ดที่เพิ่มเข้ามา: เซฟตำแหน่งปัจจุบันของกบเขียวก่อนย้าย Scene ---
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
             {
-                PlayerPrefs.SetFloat("ReturnPosX", player.transform.position.x);
-                PlayerPrefs.SetFloat("ReturnPosY", player.transform.position.y);
-                PlayerPrefs.SetInt("IsReturningFromMiniGame", 1); // ตั้งค่าสถานะว่ากำลังจะกลับมา
-                PlayerPrefs.Save();
-            }
-            // -------------------------------------------------------------
+                GameManager.Instance.returnPosition = player.transform.position;
 
+                HealthSystem hs = player.GetComponent<HealthSystem>();
+                if (hs != null) GameManager.Instance.savedHealth = hs.currentHealth;
+
+                // --- เพิ่มการฝากกระสุนตรงนี้ ---
+                PlayerShooting ps = player.GetComponent<PlayerShooting>();
+                if (ps != null) GameManager.Instance.savedAmmo = ps.currentAmmo;
+
+                GameManager.Instance.isReturningFromMiniGame = true;
+            }
             SceneManager.LoadScene(sceneToLoad);
-        }
-        else
-        {
-            Debug.LogWarning("ยังไม่ได้ใส่ชื่อ Scene ที่ต้องการให้ไป ในสคริปต์ QuestionPoint ครับ!");
         }
     }
 
