@@ -11,6 +11,8 @@ TagManager:
   - Monster
   - SafeSpot
   - Ammo
+  - CorrectBox
+  - WrongBox
   layers:
   - Default
   - TransparentFX

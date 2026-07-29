@@ -24,6 +24,18 @@ public class PlayerController : MonoBehaviour
         coll = GetComponent<BoxCollider2D>();
         sprite = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+
+        // --- โค้ดที่เพิ่มเข้ามา: เช็คว่าเพิ่งกลับมาจากมินิเกมหรือเปล่า ---
+        if (PlayerPrefs.GetInt("IsReturningFromMiniGame", 0) == 1)
+        {
+            float returnX = PlayerPrefs.GetFloat("ReturnPosX");
+            float returnY = PlayerPrefs.GetFloat("ReturnPosY");
+            transform.position = new Vector2(returnX, returnY); // วาร์ปกบไปตำแหน่งเดิม
+
+            // ล้างค่าสถานะทิ้ง จะได้ไม่วาร์ปมารันตอนเริ่มเกมครั้งหน้า
+            PlayerPrefs.SetInt("IsReturningFromMiniGame", 0);
+            PlayerPrefs.Save();
+        }
     }
 
     private void Update()

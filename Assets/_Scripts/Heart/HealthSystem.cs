@@ -63,11 +63,11 @@ public class HealthSystem : MonoBehaviour
         StartCoroutine(FlashingRoutine());
     }
 
-    private IEnumerator FlashingRoutine()
+    private IEnumerator FlashingRoutine() // ฟังก์ชันนี้จะทำให้ตัวละครวิบวับเป็นเวลา 2 วินาที
     {
         float elapsedTime = 0f;
 
-        // วิบวับเป็นเวลา 2 วินาที
+        // วิบวับเป็นเวลา 2 วินาที 
         while (elapsedTime < 2f)
         {
             spriteRenderer.color = new Color(1f, 1f, 1f, 0.5f);
