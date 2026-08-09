@@ -16,11 +16,8 @@ EditorBuildSettings:
     guid: f8a31ed981d6a8749ad018d58dd56b7d
   - enabled: 1
     path: Assets/_Scenes/Q1_2.unity
-    guid: 0e9485e08108ce64e9e1f6ca00899ab1
+    guid: 3887a7c84a55c5447b633ab64ff273a5
   - enabled: 1
     path: Assets/_Scenes/Q1_3.unity
-    guid: 57a38785ea9440b44883d2601a4d85bf
-  - enabled: 1
-    path: Assets/_Scenes/Q1_2.unity
-    guid: 9374e29ca18b037428a7331274686700
+    guid: 34061a9376631964988bf4e67dc7e069
   m_configObjects: {}
