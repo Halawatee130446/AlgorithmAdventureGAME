@@ -10,8 +10,16 @@ public class PortalMechanism : MonoBehaviour
     public bool isUnlocked = false;
     public Animator portalAnimator;
 
-    // ใช้คำสั่ง static เพื่อให้ประตูทุกบานใช้ค่าคูลดาวน์นี้ "ร่วมกัน"
+    // ใช้คำสั่ง static เพื่อให้ประตูทุกบานใช้ค่าคูลดาวน์นี้ร่วมกัน
     private static bool isCooldown = false;
+
+    // --- เพิ่มฟังก์ชันนี้เข้ามาเพื่อแก้บั๊ก! ---
+    private void Start()
+    {
+        // บังคับปลดล็อกคูลดาวน์ทุกครั้งที่โหลดเข้าฉากใหม่
+        isCooldown = false;
+    }
+    // ------------------------------------
 
     public void UnlockPortal()
     {
@@ -29,27 +37,16 @@ public class PortalMechanism : MonoBehaviour
         {
             if (destinationPoint != null)
             {
-                // เรียกใช้ Coroutine เพื่อให้สั่งหน่วงเวลาได้
                 StartCoroutine(TeleportRoutine(collision.gameObject));
             }
         }
     }
 
-    // ฟังก์ชัน Coroutine สำหรับจัดการการวาร์ปและหน่วงเวลา
     private IEnumerator TeleportRoutine(GameObject player)
     {
-        // 1. ล็อกประตูทุกบานบนกระดานไม่ให้ทำงาน
         isCooldown = true;
-
-        // 2. ย้ายตำแหน่งตัวละครกบเขียวไปที่เป้าหมาย
         player.transform.position = destinationPoint.position;
-        Debug.Log("วาร์ปสำเร็จ! กำลังติดคูลดาวน์ 3 วินาที...");
-
-        // 3. ยืนค้างหน่วงเวลา 3 วินาที (เปลี่ยนตัวเลขตรงนี้ได้ตามต้องการ)
         yield return new WaitForSeconds(3f);
-
-        // 4. หมดเวลาคูลดาวน์ ปลดล็อกให้ประตูทำงานได้อีกครั้ง
         isCooldown = false;
-        Debug.Log("คูลดาวน์เสร็จสิ้น ประตูพร้อมใช้งาน!");
     }
 }

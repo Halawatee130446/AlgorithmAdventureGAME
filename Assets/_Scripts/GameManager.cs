@@ -12,6 +12,11 @@ public class GameManager : MonoBehaviour
     public Vector2 returnPosition;
     public int savedHealth;
     public int savedAmmo;
+    public float savedTime;
+
+    [Header("ระบบ Checkpoint")]
+    public bool hasCheckpoint = false; // เช็คว่าเคยเหยียบจุดเช็คอินหรือยัง
+    public Vector2 lastCheckpointPos; // เก็บพิกัดจุดเช็คอินล่าสุด
 
     private void Awake()
     {

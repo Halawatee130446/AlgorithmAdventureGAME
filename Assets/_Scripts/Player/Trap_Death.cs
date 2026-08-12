@@ -90,6 +90,26 @@ public class Trap_Death : MonoBehaviour
         }
     }
 
+    // เพิ่มฟังก์ชันนี้เพื่อให้กบเขียวรับดาเมจจากสิ่งของทะลุได้ (Trigger) เช่น เปลวไฟ
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (healthSystem.isInvincible) return;
+
+        if (collision.gameObject.CompareTag("Trap"))
+        {
+            bool isDead = healthSystem.TakeDamage(1);
+            if (isDead)
+            {
+                Die();
+            }
+            else
+            {
+                anim.SetTrigger("hurt");
+                StartCoroutine(RespawnAfterDelay());
+            }
+        }
+    }
+
 
     private IEnumerator RespawnAfterDelay()
     {
@@ -116,10 +136,18 @@ public class Trap_Death : MonoBehaviour
             }
         }
 
-        // 4. วาร์ปตัวละคร
-        if (nearestSpot != null)
+        // 4. วาร์ปตัวละคร (ระบบใหม่: เช็ค Checkpoint ก่อน)
+        if (GameManager.Instance != null && GameManager.Instance.hasCheckpoint)
         {
+            // ถ้าเคยเหยียบ Checkpoint แล้ว ให้วาร์ปไปที่ Checkpoint ล่าสุด
+            transform.position = GameManager.Instance.lastCheckpointPos;
+            Debug.Log("วาร์ปกลับไปที่ Checkpoint!");
+        }
+        else if (nearestSpot != null)
+        {
+            // (ระบบเก่า) ถ้ายังไม่เคยเจอ Checkpoint เลย ค่อยใช้ SafeSpot ใกล้สุดแก้ขัด
             transform.position = nearestSpot.position;
+            Debug.Log("ยังไม่มี Checkpoint... วาร์ปไป SafeSpot แทน");
         }
 
         // 5. ปลดสต๊าฟ: คืนระบบฟิสิกส์และสิทธิ์การควบคุมให้ผู้เล่นอีกครั้ง
@@ -148,6 +176,18 @@ public class Trap_Death : MonoBehaviour
         GetComponent<PlayerController>().enabled = false;
         rb.bodyType = RigidbodyType2D.Static;
         anim.SetTrigger("death");
+
+        // รอ 0.8 วิ แล้วเรียกหน้าต่าง Game Over (เหมือนกับตอนเวลาหมด)
+        Invoke("TriggerGameOver", 0.8f);
+    }
+
+    private void TriggerGameOver()
+    {
+        GameOverManager gameOverSystem = Object.FindFirstObjectByType<GameOverManager>();
+        if (gameOverSystem != null)
+        {
+            gameOverSystem.ShowGameOver();
+        }
     }
 
     private void RestartLevel()

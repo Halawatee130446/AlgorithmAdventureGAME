@@ -46,13 +46,19 @@ public class QuestionPoint : MonoBehaviour
             if (player != null)
             {
                 GameManager.Instance.returnPosition = player.transform.position;
-
                 HealthSystem hs = player.GetComponent<HealthSystem>();
                 if (hs != null) GameManager.Instance.savedHealth = hs.currentHealth;
 
-                // --- เพิ่มการฝากกระสุนตรงนี้ ---
                 PlayerShooting ps = player.GetComponent<PlayerShooting>();
                 if (ps != null) GameManager.Instance.savedAmmo = ps.currentAmmo;
+
+                // --- เพิ่มการฝากเวลาตรงนี้ ---
+                LevelTimer levelTimer = Object.FindFirstObjectByType<LevelTimer>();
+                if (levelTimer != null && levelTimer.useTimer)
+                {
+                    GameManager.Instance.savedTime = levelTimer.GetCurrentTime();
+                }
+                // --------------------------
 
                 GameManager.Instance.isReturningFromMiniGame = true;
             }
