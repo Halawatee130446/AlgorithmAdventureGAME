@@ -13,6 +13,10 @@ TagManager:
   - Ammo
   - CorrectBox
   - WrongBox
+  - X
+  - Y
+  - Z
+  - V
   layers:
   - Default
   - TransparentFX
@@ -24,9 +28,9 @@ TagManager:
   - Background
   - OverBackground
   - 
-  - 
-  - 
-  - 
+  - Box
+  - PurpleZone
+  - Player
   - 
   - 
   - 

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2160951870466025514}
   - component: {fileID: 6357764925431638079}
   - component: {fileID: 4445457791351474538}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sprikes
   m_TagString: Trap
   m_Icon: {fileID: 0}

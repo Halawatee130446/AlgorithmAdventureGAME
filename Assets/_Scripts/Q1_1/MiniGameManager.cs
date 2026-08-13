@@ -80,7 +80,7 @@ public class MiniGameManager : MonoBehaviour
         {
             int min = Mathf.FloorToInt(timeLimit / 60F);
             int sec = Mathf.FloorToInt(timeLimit - min * 60);
-            inGameTimerText.text = string.Format("เวลา: {0:00}:{1:00}", min, sec);
+            inGameTimerText.text = string.Format(": {0:00}:{1:00}", min, sec);
         }
     }
 
