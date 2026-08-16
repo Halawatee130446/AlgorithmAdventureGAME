@@ -38,12 +38,12 @@ public class GameOverManager : MonoBehaviour
         // 2. เช็คเงื่อนไขเวลา
         if (levelTimer != null && levelTimer.useTimer && timeInt <= 0)
         {
-            timeText.text = "Time's Up!";
+            timeText.text = "Time's Up! Game Over!";
             timeText.color = Color.red; // เปลี่ยนข้อความเป็นสีแดง
         }
         else
         {
-            timeText.text = timeInt.ToString() + " s";
+            timeText.text = timeInt.ToString() + " seconds left";
             timeText.color = Color.black; // เปลี่ยนกลับเป็นสีปกติ (ปรับสีดำ/ขาวตามใจชอบได้เลยครับ)
         }
 

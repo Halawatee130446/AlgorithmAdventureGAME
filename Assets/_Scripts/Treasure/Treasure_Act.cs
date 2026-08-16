@@ -11,18 +11,19 @@ public class Treasure_Act : MonoBehaviour
 
     private bool playerInside = false;
     private bool isOpened = false;
+    private bool hasRead = false; // 🟢 เพิ่มตัวแปรเช็คว่าเคยอ่านหรือยัง
 
-    [Header("UI Settings")]
+    [Header("Knowledge UI Settings")]
+
     [SerializeField] private GameObject notificationPanel;
     [SerializeField] private Text hintText;
 
     [Header("Knowledge UI Settings")]
     [SerializeField] private GameObject KnowledgePanel;
+    [SerializeField] private GameObject bookPage; // 🟢 เพิ่มอันนี้ สำหรับหน้ากระดาษที่จะส่งเข้าสมุดรวม!
 
-    // --- แก้ไขเป็น Array ([]) เพื่อให้ใส่ได้หลายจุด ---
     [Header("Quiz Point Settings")]
     [SerializeField] private GameObject[] questionMarkPoints;
-    // ----------------------------------------
 
     private PlayerController playerMovement;
     private PlayerShooting playerShooting;
@@ -34,27 +35,36 @@ public class Treasure_Act : MonoBehaviour
         if (notificationPanel != null) notificationPanel.SetActive(false);
         if (KnowledgePanel != null) KnowledgePanel.SetActive(false);
 
-        // เช็คว่าเคยเปิดหรือยัง?
+        // 1. เช็คว่าเคยเปิดหรือยัง?
         if (PlayerPrefs.GetInt(chestID + "_isOpened", 0) == 1)
         {
             isOpened = true;
-
-            // --- 1. บังคับเล่นท่า Opened ทันที (อ้างอิงชื่อจากรูป Animator ของคุณ) ---
             anim.Play("Opened");
-            anim.SetInteger("treasureState", 4); // ตั้งค่า state เผื่อไว้ตอนผู้เล่นเดินเข้าออก
+            anim.SetInteger("treasureState", 4);
+        }
 
-            // --- 2. เรียกใช้ฟังก์ชันโชว์จุดคำถาม ---
+        // 🟢 2. เช็คว่าเคยอ่านหนังสือหรือยัง? (ถ้าเคยอ่านแล้วถึงจะโชว์คำถาม)
+        if (PlayerPrefs.GetInt(chestID + "_hasRead", 0) == 1)
+        {
+            hasRead = true;
             ShowQuestionMarks();
+
+            // 🟢 ถ้าโหลดฉากมาแล้วพบว่าเคยอ่านหีบนี้แล้ว ให้ส่งหน้ากระดาษเข้าสมุดรวมไปเลย
+            if (InGameKnowledgeBook.Instance != null && bookPage != null)
+            {
+                InGameKnowledgeBook.Instance.AddPage(bookPage);
+            }
         }
         else
         {
-            // ถ้ายังไม่เคยเปิด ก็ซ่อนตามปกติ
+            // ถ้ายังไม่เคยอ่าน ให้ซ่อนจุดคำถามไว้ก่อน
             foreach (GameObject qp in questionMarkPoints)
             {
                 if (qp != null) qp.SetActive(false);
             }
         }
     }
+
     void Update()
     {
         if (playerInside)
@@ -84,8 +94,7 @@ public class Treasure_Act : MonoBehaviour
             hintText.text = "Press R to Read!";
         }
 
-        // เรียกใช้ฟังก์ชันโชว์จุดคำถาม
-        ShowQuestionMarks();
+        // 🟢 เอา ShowQuestionMarks(); ออกจากตรงนี้ เพราะเปิดกล่องอย่างเดียวยังไม่ให้ทำควิซ
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -132,11 +141,32 @@ public class Treasure_Act : MonoBehaviour
         if (KnowledgePanel != null) KnowledgePanel.SetActive(true);
         if (notificationPanel != null) notificationPanel.SetActive(false);
         Player_cantMove();
+
+        // 🟢 หยุดเวลาในเกม เพื่อให้อ่านได้อย่างสบายใจ
+        Time.timeScale = 0f;
+
+        // 🟢 ถ้าเพิ่งเคยกดอ่านครั้งแรก ให้เซฟประวัติและเสกจุดคำถามออกมา!
+        if (!hasRead)
+        {
+            hasRead = true;
+            PlayerPrefs.SetInt(chestID + "_hasRead", 1);
+            PlayerPrefs.Save();
+            ShowQuestionMarks();
+
+            // 🟢 ถ้าเพิ่งกดอ่านครั้งแรก ก็ให้ส่งหน้ากระดาษเข้าสมุดรวมแบบสดๆ ร้อนๆ!
+            if (InGameKnowledgeBook.Instance != null && bookPage != null)
+            {
+                InGameKnowledgeBook.Instance.AddPage(bookPage);
+            }
+        }
     }
 
     public void CloseKnowledge()
     {
         Player_canMove();
+
+        // 🟢 คืนเวลาให้เกมเดินต่อ เมื่อกดปิดหน้าต่าง
+        Time.timeScale = 1f;
     }
 
     private void Player_cantMove()
@@ -151,165 +181,30 @@ public class Treasure_Act : MonoBehaviour
         if (playerShooting != null) playerShooting.enabled = true;
     }
 
-    // --- 3. ฟังก์ชันใหม่: เอาไว้กรองว่าจุดไหนตอบถูกแล้วให้ซ่อน จุดไหนยังไม่ตอบให้โชว์ ---
     private void ShowQuestionMarks()
     {
         foreach (GameObject qp in questionMarkPoints)
         {
             if (qp != null)
             {
-                // ดึงสคริปต์ QuestionPoint มาอ่านค่า ID
                 QuestionPoint qScript = qp.GetComponent<QuestionPoint>();
 
                 if (qScript != null)
                 {
-                    // เช็คว่าข้อนี้เคยตอบถูก (Passed) หรือยัง?
                     if (PlayerPrefs.GetInt(qScript.questionID + "_Passed", 0) == 0)
                     {
-                        qp.SetActive(true); // ถ้ายังไม่ผ่าน ให้โชว์
+                        qp.SetActive(true);
                     }
                     else
                     {
-                        qp.SetActive(false); // ถ้าผ่านแล้ว ให้ซ่อนถาวร
+                        qp.SetActive(false);
                     }
                 }
                 else
                 {
-                    qp.SetActive(true); // เผื่อลืมใส่สคริปต์ไว้
+                    qp.SetActive(true);
                 }
             }
         }
     }
 }
-
-/* เก่าาาาาาาا
-
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-
-public class Treasure_Act : MonoBehaviour
-{
-    private Animator anim;
-
-    private bool playerInside = false;
-    private bool isOpened = false;
-
-    [Header("UI Settings")]
-    [SerializeField] private GameObject notificationPanel;
-    [SerializeField] private Text hintText;
-
-    [Header("Knowledge UI Settings")]
-    [SerializeField] private GameObject KnowledgePanel;
-
-    private PlayerController playerMovement;
-    private PlayerShooting playerShooting;
-
-    void Start()
-    {
-        anim = GetComponent<Animator>();
-
-        if (notificationPanel != null) notificationPanel.SetActive(false);
-        if (KnowledgePanel != null) KnowledgePanel.SetActive(false);
-    }
-
-    void Update()
-    {
-        if (playerInside)
-        {
-            if (!isOpened && Input.GetKeyDown(KeyCode.O))
-            {
-                OpenTreasure();
-            }
-
-            if (isOpened && Input.GetKeyDown(KeyCode.R))
-            {
-                ReadKnowledge();
-            }
-        }
-    }
-
-    private void OpenTreasure()
-    {
-        isOpened = true;
-        anim.SetInteger("treasureState", 3);
-
-        if (hintText != null)
-        {
-            hintText.text = "Press R to Read!";
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            playerInside = true;
-            playerMovement = collision.gameObject.GetComponent<PlayerController>();
-            playerShooting = collision.gameObject.GetComponent<PlayerShooting>();
-
-            if (notificationPanel != null) notificationPanel.SetActive(true);
-
-            if (!isOpened)
-            {
-                anim.SetInteger("treasureState", 1);
-                if (hintText != null) hintText.text = "Press O to Open!";
-            }
-            else
-            {
-                anim.SetInteger("treasureState", 3);
-                if (hintText != null) hintText.text = "Press R to Read!";
-            }
-        }
-    }
-
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            playerInside = false;
-
-            if (notificationPanel != null) notificationPanel.SetActive(false);
-
-            // ถ้าผู้เล่นเดินหนี (หลุดระยะหีบ) ให้ปิดหน้าต่างด้วย
-            if (KnowledgePanel != null) KnowledgePanel.SetActive(false);
-            Player_canMove();
-
-            if (!isOpened) anim.SetInteger("treasureState", 0);
-            else anim.SetInteger("treasureState", 4);
-        }
-    }
-
-    private void ReadKnowledge()
-    {
-        if (KnowledgePanel != null) KnowledgePanel.SetActive(true);
-        if (notificationPanel != null) notificationPanel.SetActive(false);
-        Player_cantMove();
-    }
-
-    // ฟังก์ชันรอรับสัญญาณสาธารณะ (public) เมื่อปุ่มกากบาทถูกกด
-    public void CloseKnowledge()
-    {
-        Player_canMove();
-    }
-
-    private void Player_cantMove()
-    {
-        if (playerMovement != null) playerMovement.enabled = false;
-        if (playerShooting != null) playerShooting.enabled = false;
-    }
-
-    private void Player_canMove()
-    {
-        if (playerMovement != null) playerMovement.enabled = true;
-        if (playerShooting != null) playerShooting.enabled = true;
-    }
-
-    // เพิ่มฟังก์ชันนี้เพื่อให้สคริปต์อื่นมาถามได้ว่า "เปิดหีบหรือยัง?"
-    public bool CheckIfOpened()
-    {
-        return isOpened;
-    }
-}
-*/

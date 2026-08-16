@@ -7,6 +7,9 @@ public class GameManager : MonoBehaviour
     [Header("ระบบเซฟดาว")]
     public int totalStars = 0;
 
+    [Header("ระบบเงิน (สะสมเพื่อ Knowledge Library)")]
+    public int globalCoins = 0;
+
     [Header("ข้อมูลชั่วคราวตอนย้าย Scene")]
     public bool isReturningFromMiniGame = false;
     public Vector2 returnPosition;
@@ -45,6 +48,7 @@ public class GameManager : MonoBehaviour
     private void LoadGameData()
     {
         totalStars = PlayerPrefs.GetInt("TotalStars", 0);
+        globalCoins = PlayerPrefs.GetInt("GlobalCoins", 0);
     }
 
     // ฟังก์ชันนี้จะถูกเรียกตอนที่กบเขียวตาย
@@ -55,6 +59,7 @@ public class GameManager : MonoBehaviour
 
         // 2. แบ็คอัพดาวไว้ก่อน (เวลาตายดาวจะได้ไม่หาย)
         int keepStars = totalStars;
+        int keepCoins = globalCoins;
 
         // 3. ล้างเซฟทั้งหมด (รีเซ็ตหีบ, มอนสเตอร์, มินิเกม)
         PlayerPrefs.DeleteAll();
@@ -64,6 +69,18 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt("TotalStars", totalStars);
         PlayerPrefs.Save();
 
+        globalCoins = keepCoins;
+        PlayerPrefs.SetInt("GlobalCoins", globalCoins);
+
         Debug.Log("ล้างข้อมูลตอนตายเรียบร้อย! เริ่มด่านใหม่แบบคลีนๆ");
+    }
+
+    public void AddCoins(int amount)
+    {
+        globalCoins += amount; // บวกเงินเพิ่มเข้าไป
+        PlayerPrefs.SetInt("GlobalCoins", globalCoins); // เซฟลงสมองเกมทันที
+        PlayerPrefs.Save();
+
+        Debug.Log("เก็บเหรียญได้! ยอดรวมในบัญชีตอนนี้: " + globalCoins);
     }
 }

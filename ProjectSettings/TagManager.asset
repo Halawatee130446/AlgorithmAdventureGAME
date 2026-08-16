@@ -60,14 +60,26 @@ TagManager:
   - name: Background
     uniqueID: 3712317795
     locked: 0
+  - name: Background2
+    uniqueID: 2066488681
+    locked: 0
   - name: OverBackground
     uniqueID: 31225283
+    locked: 0
+  - name: OverBackground2
+    uniqueID: 2689905115
+    locked: 0
+  - name: OpjectGround
+    uniqueID: 2514740881
+    locked: 0
+  - name: TEACH
+    uniqueID: 3567317227
     locked: 0
   - name: Terrain
     uniqueID: 1609617215
     locked: 0
-  - name: Trap
-    uniqueID: 165576955
+  - name: Fontground
+    uniqueID: 3397314267
     locked: 0
   - name: Question
     uniqueID: 3436649347
@@ -75,12 +87,15 @@ TagManager:
   - name: treasureBackground
     uniqueID: 4238486501
     locked: 0
-  - name: fontGround
-    uniqueID: 2689905115
+  - name: Trap
+    uniqueID: 165576955
     locked: 0
   - name: treasure
     uniqueID: 1347903913
     locked: 0
   - name: Player&Monster
     uniqueID: 358220983
+    locked: 0
+  - name: FontGrond2
+    uniqueID: 3292159565
     locked: 0

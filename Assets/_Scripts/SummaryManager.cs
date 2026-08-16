@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -10,14 +11,44 @@ public class SummaryManager : MonoBehaviour
     public GameObject buttonMenu;
     public GameObject buttonNextLV;
 
-    [Header("UI Texts (ลาก Text Legacy มาใส่)")]
+    [Header("UI Texts & Values")]
     public Text timeText;
-    public Text heartText;
     public Text ammoText;
     public Text resultText;
+    public GameObject[] heartIcons;
 
-    [Header("Stars UI (ลาก FilledStar_1 ของทั้ง 3 ดวงมาใส่ตามลำดับ)")]
-    public GameObject[] filledStars; // ใส่ขนาดเป็น 3 แล้วลากดาวที่เติมสีแล้วมาใส่
+    [Header("Mini-Game Results UI")]
+    public Text q1AttemptText;
+    public GameObject q1FilledStar;
+    public Text q2AttemptText;
+    public GameObject q2FilledStar;
+    public Text q3AttemptText;
+    public GameObject q3FilledStar;
+
+    [Header("Overall 4-Star System (แบบสลับก้อน GameObject)")]
+    public float totalLevelTime = 300f;
+
+    // ดาวดวงที่ 1 (ผ่านด่าน)
+    public GameObject starPassParent;
+    public GameObject starPassFilled;
+
+    // ดาวดวงที่ 2 (หัวใจ)
+    public GameObject starHealthParent;
+    public GameObject starHealthFilled;
+
+    // ดาวดวงที่ 3 (เวลา)
+    public GameObject starTimeParent;
+    public GameObject starTimeFilled;
+
+    // ดาวดวงที่ 4 (ควิซ)
+    public GameObject starQuizParent;
+    public GameObject starQuizFilled;
+
+    // 🟢 เพิ่มส่วนนี้เข้ามาให้ปรับตั้งค่าเงื่อนไขได้จาก Unity เลย!
+    [Header("Star Conditions (ตั้งค่าเงื่อนไขการได้ดาว)")]
+    public int requiredHearts = 3; // เลือดขั้นต่ำที่ต้องเหลือ (เช่น ตั้งไว้ 3)
+    public float requiredTimePercent = 0.2f; // เปอร์เซ็นต์เวลาที่ต้องเหลือ (0.2 = 20%)
+    public int requiredQuizPass = 2; // จำนวนข้อควิซที่ต้องผ่าน (ได้ดาวมินิเกม)
 
     [Header("System References")]
     public HealthSystem playerHealth;
@@ -26,108 +57,137 @@ public class SummaryManager : MonoBehaviour
 
     [Header("Settings")]
     public string menuSceneName = "Menu";
-    public string nextLevelSceneName = "Level_2"; // ชื่อซีนด่านถัดไป
+    public string nextLevelSceneName = "Level_2";
 
     private void Start()
     {
-        // ซ่อนหน้าต่างนี้ไว้ก่อนตอนเริ่มเกม
         if (stageClearPanel != null) stageClearPanel.SetActive(false);
     }
 
-    // ฟังก์ชันนี้เรียกใช้เมื่อกบเขียวเข้าเส้นชัย
     public void ShowStageClear()
     {
-        Time.timeScale = 0f; // หยุดเวลาในเกม
+        Time.timeScale = 0f;
         if (stageClearPanel != null) stageClearPanel.SetActive(true);
 
-        // ซ่อนปุ่มและข้อความผลลัพธ์ไว้ก่อน ค่อยให้โชว์ตอนท้าย (เพิ่มความตื่นเต้น)
         if (buttonMenu != null) buttonMenu.SetActive(false);
         if (buttonNextLV != null) buttonNextLV.SetActive(false);
         if (resultText != null) resultText.gameObject.SetActive(false);
 
-        // ปิดดาวทุกดวงไว้ก่อน (จะโชว์แค่ StarX สีดำด้านหลัง)
-        foreach (GameObject star in filledStars)
-        {
-            if (star != null) star.SetActive(false);
-        }
+        // ซ่อนก้อนดาวทั้งหมดไว้ก่อน
+        if (starPassParent != null) starPassParent.SetActive(false);
+        if (starHealthParent != null) starHealthParent.SetActive(false);
+        if (starTimeParent != null) starTimeParent.SetActive(false);
+        if (starQuizParent != null) starQuizParent.SetActive(false);
 
         StartCoroutine(CalculateAndShowSummary());
     }
 
     private IEnumerator CalculateAndShowSummary()
     {
-        // 1. ดึงข้อมูลปัจจุบันของกบเขียว
         int currentHearts = playerHealth != null ? playerHealth.currentHealth : 0;
         int currentAmmo = playerShooting != null ? playerShooting.currentAmmo : 0;
         float currentTime = (levelTimer != null && levelTimer.useTimer) ? levelTimer.GetCurrentTime() : 0f;
         int timeInt = Mathf.FloorToInt(currentTime);
 
-        // โชว์ตัวเลขทันที (หรือถ้าอยากทำแอนิเมชันตัวเลขวิ่ง ค่อยมาอัปเกรดทีหลังได้)
-        if (heartText != null) heartText.text = "x" + currentHearts.ToString();
-        if (ammoText != null) ammoText.text = "x" + currentAmmo.ToString();
         if (timeText != null) timeText.text = timeInt.ToString() + " s";
+        if (ammoText != null) ammoText.text = "x" + currentAmmo.ToString();
 
-        // หน่วงเวลาให้ผู้เล่นดูตัวเลขแป๊บนึง
-        yield return new WaitForSecondsRealtime(0.5f);
-
-        // 2. คำนวณจำนวนดาว (คุณสามารถปรับเงื่อนไขตรงนี้ได้ตามใจชอบ)
-        // ตัวอย่างเงื่อนไข: 
-        // ได้ 3 ดาว ถ้าเลือดเต็ม 4 ดวง
-        // ได้ 2 ดาว ถ้าเลือดเหลือ 2-3 ดวง
-        // ได้ 1 ดาว ถ้าเลือดเหลือ 1 ดวง
-        // ได้ 0 ดาว ถ้า... (ปกติเข้าเส้นชัยได้แปลว่าเลือดต้องเหลืออย่างน้อย 1 แต่เผื่อไว้)
-        int earnedStars = 0;
-        if (currentHearts >= 4) earnedStars = 3;
-        else if (currentHearts >= 2) earnedStars = 2;
-        else if (currentHearts >= 1) earnedStars = 1;
-
-        // ถ้าคุณใช้ระบบดาวจาก GameManager (ดาวจากมินิเกม) ให้ใช้บรรทัดล่างนี้แทนการคำนวณด้านบน:
-        // earnedStars = GameManager.Instance != null ? GameManager.Instance.totalStars : 0;
-
-        // 3. แสดงแอนิเมชันเปิดดาวทีละดวง
-        for (int i = 0; i < earnedStars; i++)
+        for (int i = 0; i < heartIcons.Length; i++)
         {
-            if (i < filledStars.Length && filledStars[i] != null)
-            {
-                filledStars[i].SetActive(true);
-                // รอ 0.3 วิ ก่อนเปิดดาวดวงถัดไป ให้จังหวะมันดูตื่นเต้น
-                yield return new WaitForSecondsRealtime(0.3f);
-            }
+            if (heartIcons[i] != null) heartIcons[i].SetActive(i < currentHearts);
         }
 
-        // 4. กำหนดคำพูดใน Result ตามจำนวนดาวที่ได้
+        UpdateMiniGameResultUI("Q1_1", q1AttemptText, q1FilledStar);
+        UpdateMiniGameResultUI("Q1_2", q2AttemptText, q2FilledStar);
+        UpdateMiniGameResultUI("Q1_3", q3AttemptText, q3FilledStar);
+
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        // --- เตรียมจัดเรียงดาว 4 ดวง ---
+        List<GameObject> passedStars = new List<GameObject>();
+        List<GameObject> failedStars = new List<GameObject>();
+
+        // 1. ดาวผ่านด่าน (ได้เสมอ)
+        if (starPassFilled != null) starPassFilled.SetActive(true);
+        passedStars.Add(starPassParent);
+
+        // 2. ดาวหัวใจ (เช็คจากค่าที่ตั้งไว้)
+        if (currentHearts >= requiredHearts)
+        {
+            if (starHealthFilled != null) starHealthFilled.SetActive(true);
+            passedStars.Add(starHealthParent);
+        }
+        else
+        {
+            if (starHealthFilled != null) starHealthFilled.SetActive(false);
+            failedStars.Add(starHealthParent);
+        }
+
+        // 3. ดาวเวลา (เช็คจากเปอร์เซ็นต์ที่ตั้งไว้)
+        float requiredTime = totalLevelTime * requiredTimePercent;
+        if (currentTime >= requiredTime)
+        {
+            if (starTimeFilled != null) starTimeFilled.SetActive(true);
+            passedStars.Add(starTimeParent);
+        }
+        else
+        {
+            if (starTimeFilled != null) starTimeFilled.SetActive(false);
+            failedStars.Add(starTimeParent);
+        }
+
+        // 4. ดาวควิซ (เช็คจากจำนวนข้อที่ตั้งไว้)
+        int quizStars = GameManager.Instance != null ? GameManager.Instance.totalStars : 0;
+        if (quizStars >= requiredQuizPass)
+        {
+            if (starQuizFilled != null) starQuizFilled.SetActive(true);
+            passedStars.Add(starQuizParent);
+        }
+        else
+        {
+            if (starQuizFilled != null) starQuizFilled.SetActive(false);
+            failedStars.Add(starQuizParent);
+        }
+
+        // เอาก้อนที่ผ่าน ขึ้นก่อนก้อนที่พลาด
+        List<GameObject> finalOrder = new List<GameObject>();
+        finalOrder.AddRange(passedStars);
+        finalOrder.AddRange(failedStars);
+
+        // --- แอนิเมชันโชว์ทีละดวง พร้อมสลับที่ ---
+        for (int i = 0; i < finalOrder.Count; i++)
+        {
+            if (finalOrder[i] != null)
+            {
+                finalOrder[i].transform.SetSiblingIndex(i);
+                finalOrder[i].SetActive(true);
+            }
+            yield return new WaitForSecondsRealtime(0.3f);
+        }
+
+        yield return new WaitForSecondsRealtime(0.2f);
+
         if (resultText != null)
         {
             resultText.gameObject.SetActive(true);
-            switch (earnedStars)
-            {
-                case 3:
-                    resultText.text = "Well Done !";
-                    resultText.color = Color.green; // เปลี่ยนสีข้อความได้ด้วย
-                    break;
-                case 2:
-                    resultText.text = "Great !";
-                    resultText.color = new Color(1f, 0.5f, 0f); // สีส้ม
-                    break;
-                case 1:
-                    resultText.text = "Good !";
-                    resultText.color = Color.yellow;
-                    break;
-                case 0:
-                default:
-                    resultText.text = "You Survived !";
-                    resultText.color = Color.white;
-                    break;
-            }
+            int passCount = passedStars.Count;
+            if (passCount == 4) resultText.text = "Well Done !";
+            else if (passCount == 3) resultText.text = "Great !";
+            else if (passCount == 2) resultText.text = "Good !";
+            else resultText.text = "You Survived !";
         }
 
-        // 5. โชว์ปุ่มให้ไปต่อ
-        yield return new WaitForSecondsRealtime(0.2f);
         if (buttonMenu != null) buttonMenu.SetActive(true);
         if (buttonNextLV != null) buttonNextLV.SetActive(true);
     }
 
-    // --- ฟังก์ชันสำหรับปุ่มกด ---
+    private void UpdateMiniGameResultUI(string qID, Text attemptText, GameObject filledStarObj)
+    {
+        int attempts = PlayerPrefs.GetInt(qID + "_Attempts", 1);
+        if (attemptText != null) attemptText.text = attempts + " Attempt" + (attempts > 1 ? "s" : "");
+        if (filledStarObj != null) filledStarObj.SetActive(attempts <= 2);
+    }
+
     public void OnClickMenu()
     {
         Time.timeScale = 1f;
@@ -137,7 +197,6 @@ public class SummaryManager : MonoBehaviour
     public void OnClickNextLevel()
     {
         Time.timeScale = 1f;
-        // อย่าลืมเอา Scene ด่าน 2 ไปใส่ใน Build Settings ด้วยนะครับ
         SceneManager.LoadScene(nextLevelSceneName);
     }
 }

@@ -167,20 +167,31 @@ public class MiniGameManager : MonoBehaviour
             retryButton.SetActive(false);
             goBackButton.SetActive(false);
 
-            if (attempts == 1 && PlayerPrefs.GetInt(questionID + "_Passed", 0) == 0)
+            // --- 1. จัดการเรื่อง "ข้อความ" (Text) ---
+            if (attempts == 1)
             {
                 attemptSummaryText.text = "Good Job!";
+            }
+            else
+            {
+                attemptSummaryText.text = attempts + " attempts"; // ถ้าเล่นรอบ 2 ขึ้นไป จะแสดงเลขรอบ
+            }
+
+            // --- 2. จัดการเรื่อง "การแจกดาว" (Star) ---
+            // ถ้าชนะภายใน 2 ครั้ง (<= 2) และยังไม่เคยผ่านมาก่อน ถึงจะได้ดาว!
+            if (attempts <= 2 && PlayerPrefs.GetInt(questionID + "_Passed", 0) == 0)
+            {
                 brightStar.SetActive(true);
                 darkStar.SetActive(false);
                 if (GameManager.Instance != null) GameManager.Instance.AddStar();
             }
             else
             {
-                attemptSummaryText.text = attempts + " attempts";
                 brightStar.SetActive(false);
                 darkStar.SetActive(true);
             }
 
+            // บันทึกว่าด่านนี้เคยเล่นผ่านแล้ว
             PlayerPrefs.SetInt(questionID + "_Passed", 1);
             PlayerPrefs.Save();
         }

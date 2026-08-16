@@ -4,10 +4,14 @@ using UnityEngine;
 
 public class HealthSystem : MonoBehaviour
 {
-    [SerializeField] private int baseHealth = 4;
-    // ลบ public int maxHealth = 4; ออกไปได้เลยครับ จะได้ไม่ซ้ำซ้อนกัน
+    [Header("Health Settings")]
+    public int baseHealth = 4;         // เลือดเริ่มต้นตอนเข้าด่าน
+    public int currentMaxHealth = 5;   // ขีดจำกัดเลือดที่เก็บได้ในด่านนี้ (5)
+    public int absoluteMaxHealth = 6;  // ขีดจำกัดสูงสุดเผื่ออัปเกรดในอนาคต (6)
+
     public int currentHealth;
 
+    [Header("System References")]
     [SerializeField] private HealthUI healthUI;
     [SerializeField] private bool useExtraHeartBuff = false;
 
@@ -37,13 +41,53 @@ public class HealthSystem : MonoBehaviour
             }
         }
 
-        // 3. เมื่อได้ค่า currentHealth ที่ถูกต้องแล้ว ค่อยสั่งอัปเดต UI รูปหัวใจ 
+        // ป้องกันไม่ให้ตอนเริ่มเกม เลือดเกินขีดจำกัด
+        if (currentHealth > currentMaxHealth)
+        {
+            currentHealth = currentMaxHealth;
+        }
+
+        // 3. อัปเดต UI รูปหัวใจ 
+        UpdateHealthUI();
+    }
+
+    // --- 🟢 ฟังก์ชันใหม่: สำหรับเก็บไอเทมหัวใจตามด่าน ---
+    public void Heal(int healAmount)
+    {
+        currentHealth += healAmount;
+
+        // ถ้าฮีลแล้วเลือดทะลุหลอดลิมิตปัจจุบัน (เช่น ทะลุ 5) ให้โดนตัดกลับมาเท่าลิมิต
+        if (currentHealth > currentMaxHealth)
+        {
+            currentHealth = currentMaxHealth;
+        }
+
+        UpdateHealthUI();
+        Debug.Log("เก็บหัวใจ! เลือดตอนนี้: " + currentHealth + "/" + currentMaxHealth);
+    }
+
+    // --- 🌟 ฟังก์ชันใหม่เผื่ออนาคต: อัปเกรดหลอดเลือดเป็น 6 ดวง ---
+    public void UpgradeMaxHealth()
+    {
+        if (currentMaxHealth < absoluteMaxHealth)
+        {
+            currentMaxHealth++; // ขยายหลอดเลือดจาก 5 เป็น 6
+            currentHealth = currentMaxHealth; // เติมเลือดให้เต็มหลอดใหม่ด้วย
+            UpdateHealthUI();
+            Debug.Log("อัปเกรดเลือดสูงสุดเป็น: " + currentMaxHealth);
+        }
+    }
+
+    // ฟังก์ชันตัวกลางสำหรับสั่งอัปเดต UI (จะได้ไม่ต้องเขียนซ้ำหลายรอบ)
+    private void UpdateHealthUI()
+    {
         if (healthUI != null)
         {
             healthUI.UpdateHearts(currentHealth);
         }
     }
 
+    // --- โค้ดเดิมของคุณที่ทำงานได้ดีเยี่ยมอยู่แล้ว ---
     public bool TakeDamage(int damageAmount)
     {
         // ถ้าเป็นอมตะอยู่ ให้ข้ามการโดนดาเมจไปเลย
@@ -52,10 +96,7 @@ public class HealthSystem : MonoBehaviour
         currentHealth -= damageAmount;
         Debug.Log("โดนโจมตี! หัวใจเหลือ: " + currentHealth);
 
-        if (healthUI != null)
-        {
-            healthUI.UpdateHearts(currentHealth);
-        }
+        UpdateHealthUI();
 
         if (currentHealth <= 0)
         {
@@ -75,7 +116,7 @@ public class HealthSystem : MonoBehaviour
         StartCoroutine(FlashingRoutine());
     }
 
-    private IEnumerator FlashingRoutine() // ฟังก์ชันนี้จะทำให้ตัวละครวิบวับเป็นเวลา 2 วินาที
+    private IEnumerator FlashingRoutine()
     {
         float elapsedTime = 0f;
 
