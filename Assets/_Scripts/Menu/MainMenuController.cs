@@ -10,6 +10,30 @@ public class MainMenuManager : MonoBehaviour
     public string howToPlaySceneName = "HowToPlay";     // ชื่อซีนหน้าสอนเล่น
 
     // -----------------------------------------
+    // ฟังก์ชันสำหรับปุ่ม HARD RESET (ล้างข้อมูลทั้งหมด)
+    // -----------------------------------------
+    public void ClickHardResetGame()
+    {
+        // 1. ระเบิด PlayerPrefs ทิ้งทั้งหมด
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+
+        // 2. เคลียร์ค่าใน GameManager (สมองของเกม)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.totalStars = 0;
+            GameManager.Instance.globalCoins = 0;
+            GameManager.Instance.sessionCoins = 0;
+            GameManager.Instance.hasCheckpoint = false;
+        }
+
+        // 3. โหลดหน้าเมนูซ้ำเพื่อรีเฟรชภาพ UI ให้กลับเป็น 0
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        Debug.Log("⚠️ ล้างข้อมูลเกม ถอนรากถอนโคนสำเร็จ! เริ่มต้นใหม่ทั้งหมด ⚠️");
+    }
+
+    // -----------------------------------------
     // ฟังก์ชันสำหรับปุ่ม LEVELS
     // -----------------------------------------
     public void ClickLevels()

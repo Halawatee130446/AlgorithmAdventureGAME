@@ -22,26 +22,42 @@ public class HealthSystem : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
 
-        // 1. เช็คก่อนว่าเพิ่งกลับมาจากมินิเกมหรือเปล่า?
+        // 🟢 1. เช็คก่อนว่าด่านนี้ใช้ "ไอเทมเสริม" ไหม? (เพื่อกำหนดหลอดเลือด Max Health)
+        bool useItem = useExtraHeartBuff;
+        if (GameManager.Instance != null && GameManager.Instance.isUsingExtraHeart)
+        {
+            useItem = true;
+        }
+
+        if (useItem)
+        {
+            currentMaxHealth = absoluteMaxHealth; // ขยายหลอดเลือดรอไว้เลยเป็น 6
+        }
+        else
+        {
+            currentMaxHealth = 5;                 // หลอดปกติเก็บได้ 5
+        }
+
+        // 🟢 2. กำหนดเลือดปัจจุบัน (Current Health) ให้กบเขียว
         if (GameManager.Instance != null && GameManager.Instance.isReturningFromMiniGame)
         {
-            // ถ้าใช่ ให้ดึงเลือดเก่าที่ฝากไว้มาใช้เลย
+            // ถ้ากลับมาจากมินิเกม ให้ดึงเลือดที่ฝากไว้มาใส่
             currentHealth = GameManager.Instance.savedHealth;
         }
         else
         {
-            // 2. ถ้าไม่ใช่ (แปลว่าเริ่มด่านเล่นใหม่ปกติ) ค่อยคำนวณเลือดแบบปกติ
-            if (useExtraHeartBuff)
+            // ถ้าเป็นการเข้าด่านครั้งแรก
+            if (useItem)
             {
-                currentHealth = baseHealth + 1;
+                currentHealth = baseHealth + 1; // เริ่มที่ 5 ดวง
             }
             else
             {
-                currentHealth = baseHealth;
+                currentHealth = baseHealth;     // เริ่มที่ 4 ดวง
             }
         }
 
-        // ป้องกันไม่ให้ตอนเริ่มเกม เลือดเกินขีดจำกัด
+        // ป้องกันไม่ให้เลือดล้นหลอด
         if (currentHealth > currentMaxHealth)
         {
             currentHealth = currentMaxHealth;
@@ -51,12 +67,10 @@ public class HealthSystem : MonoBehaviour
         UpdateHealthUI();
     }
 
-    // --- 🟢 ฟังก์ชันใหม่: สำหรับเก็บไอเทมหัวใจตามด่าน ---
     public void Heal(int healAmount)
     {
         currentHealth += healAmount;
 
-        // ถ้าฮีลแล้วเลือดทะลุหลอดลิมิตปัจจุบัน (เช่น ทะลุ 5) ให้โดนตัดกลับมาเท่าลิมิต
         if (currentHealth > currentMaxHealth)
         {
             currentHealth = currentMaxHealth;
@@ -66,19 +80,16 @@ public class HealthSystem : MonoBehaviour
         Debug.Log("เก็บหัวใจ! เลือดตอนนี้: " + currentHealth + "/" + currentMaxHealth);
     }
 
-    // --- 🌟 ฟังก์ชันใหม่เผื่ออนาคต: อัปเกรดหลอดเลือดเป็น 6 ดวง ---
     public void UpgradeMaxHealth()
     {
         if (currentMaxHealth < absoluteMaxHealth)
         {
-            currentMaxHealth++; // ขยายหลอดเลือดจาก 5 เป็น 6
-            currentHealth = currentMaxHealth; // เติมเลือดให้เต็มหลอดใหม่ด้วย
+            currentMaxHealth++;
+            currentHealth = currentMaxHealth;
             UpdateHealthUI();
-            Debug.Log("อัปเกรดเลือดสูงสุดเป็น: " + currentMaxHealth);
         }
     }
 
-    // ฟังก์ชันตัวกลางสำหรับสั่งอัปเดต UI (จะได้ไม่ต้องเขียนซ้ำหลายรอบ)
     private void UpdateHealthUI()
     {
         if (healthUI != null)
@@ -87,10 +98,8 @@ public class HealthSystem : MonoBehaviour
         }
     }
 
-    // --- โค้ดเดิมของคุณที่ทำงานได้ดีเยี่ยมอยู่แล้ว ---
     public bool TakeDamage(int damageAmount)
     {
-        // ถ้าเป็นอมตะอยู่ ให้ข้ามการโดนดาเมจไปเลย
         if (isInvincible) return false;
 
         currentHealth -= damageAmount;
@@ -100,17 +109,15 @@ public class HealthSystem : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            return true; // เลือดหมด ส่งค่ากลับไปว่า ตายแล้ว
+            return true;
         }
         else
         {
-            // เปิดโหมดอมตะทันที! เพื่อป้องกันการโดนตีซ้ำตอนโดนสต๊าฟ
             isInvincible = true;
             return false;
         }
     }
 
-    // ฟังก์ชันนี้จะถูกเรียกให้เริ่มวิบวับนับเวลา 1.5 วินาที
     public void StartFlashingAndUnlock()
     {
         StartCoroutine(FlashingRoutine());
@@ -120,17 +127,17 @@ public class HealthSystem : MonoBehaviour
     {
         float elapsedTime = 0f;
 
-        // วิบวับเป็นเวลา 2 วินาที 
         while (elapsedTime < 2f)
         {
-            spriteRenderer.color = new Color(1f, 1f, 1f, 0.5f);
+            spriteRenderer.color = new Color(1f, 0f, 0f, 0.5f);
             yield return new WaitForSeconds(0.1f);
+
             spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
             yield return new WaitForSeconds(0.1f);
+
             elapsedTime += 0.2f;
         }
 
-        // ชัวร์ว่าสีกลับมาปกติ และปลดโหมดอมตะให้รับดาเมจครั้งต่อไปได้
         spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
         isInvincible = false;
     }

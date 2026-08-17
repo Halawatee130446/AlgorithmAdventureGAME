@@ -18,7 +18,6 @@ public class PauseMenuManager : MonoBehaviour
         }
     }
 
-    // --- ฟังก์ชันสำหรับ "ปุ่มไอคอน Pause" ในหน้าเกม ---
     public void PauseGame()
     {
         if (pausePanel != null)
@@ -28,7 +27,6 @@ public class PauseMenuManager : MonoBehaviour
         }
     }
 
-    // --- ฟังก์ชันสำหรับปุ่ม "Continue" ---
     public void ResumeGame()
     {
         if (pausePanel != null)
@@ -38,14 +36,13 @@ public class PauseMenuManager : MonoBehaviour
         }
     }
 
-    // --- ฟังก์ชันสำหรับปุ่ม "Restart" ---
     public void RestartGame()
     {
         Time.timeScale = 1f; // ⚠️ ต้องคืนค่าเวลาก่อน ไม่งั้นด่านใหม่จะค้าง
 
-        // เรียกใช้ระบบล้างเซฟตอนตายจาก GameManager ของคุณ (เพื่อรีเซ็ตของในด่าน)
         if (GameManager.Instance != null)
         {
+            // เรียกใช้ระบบล้างเซฟตอนตายจาก GameManager ของคุณ
             GameManager.Instance.ResetStateOnDeath();
         }
 
@@ -53,14 +50,16 @@ public class PauseMenuManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    // --- ฟังก์ชันสำหรับปุ่ม "Menu" ---
+    // --- 🟢 ฟังก์ชันสำหรับปุ่ม "Menu" ออกกลางคัน ---
     public void LoadMainMenu()
     {
         Time.timeScale = 1f; // ⚠️ ต้องคืนค่าเวลาก่อนเช่นกัน
 
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.isReturningFromMiniGame = false;
+            // 🟢 เรียกฟังก์ชันล้างด่านให้สะอาดหมดจดตามที่คุณคิดเลยครับ!
+            // มันจะเคลียร์หีบ มอนสเตอร์ เหรียญ เช็คพอยต์ ให้กลับมาเริ่มต้นใหม่
+            GameManager.Instance.ResetStateOnDeath();
         }
 
         // วาร์ปไปซีนเมนูหลัก

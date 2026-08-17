@@ -14,8 +14,9 @@ public class CoinUIManager : MonoBehaviour
     {
         if (coinText != null && GameManager.Instance != null)
         {
-            // ดึงเงินจากตู้เซฟหลักมาโชว์เลย จะได้ไม่โดน UI หลอกอีก!
-            coinText.text = "x " + GameManager.Instance.globalCoins.ToString();
+            // 🟢 ดึงเฉพาะเงินในกระเป๋า (sessionCoins) มาโชว์ 
+            // เพราะเงินในตู้เซฟ (globalCoins) เราจะเอาไปโชว์ใน Knowledge Library ตามที่คุณต้องการ
+            coinText.text = "x " + GameManager.Instance.sessionCoins.ToString();
         }
     }
 }

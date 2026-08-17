@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
@@ -7,8 +8,11 @@ public class GameManager : MonoBehaviour
     [Header("ระบบเซฟดาว")]
     public int totalStars = 0;
 
-    [Header("ระบบเงิน (สะสมเพื่อ Knowledge Library)")]
+    [Header("ระบบเงิน (แยกกระเป๋าตังค์กับตู้เซฟ)")]
     public int globalCoins = 0;
+    public int sessionCoins = 0;
+
+    private List<string> collectedCoinsInSession = new List<string>();
 
     [Header("ข้อมูลชั่วคราวตอนย้าย Scene")]
     public bool isReturningFromMiniGame = false;
@@ -18,8 +22,12 @@ public class GameManager : MonoBehaviour
     public float savedTime;
 
     [Header("ระบบ Checkpoint")]
-    public bool hasCheckpoint = false; // เช็คว่าเคยเหยียบจุดเช็คอินหรือยัง
-    public Vector2 lastCheckpointPos; // เก็บพิกัดจุดเช็คอินล่าสุด
+    public bool hasCheckpoint = false;
+    public Vector2 lastCheckpointPos;
+
+    // 🟢 เพิ่มตัวแปรนี้เข้ามา เพื่อให้มันจำว่าตานี้กดใช้ไอเทมมาจากหน้า LevelSelect หรือเปล่า
+    [Header("ระบบไอเทมเสริม (Boosters)")]
+    public bool isUsingExtraHeart = false;
 
     private void Awake()
     {
@@ -28,7 +36,7 @@ public class GameManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // ล้างเซฟเฉพาะตอนเปิดเกมเล่นครั้งแรก
+            // ⚠️ (ถ้าอยากให้เซฟเป็นอมตะเวลาปิดเกม อย่าลืมใส่ // หน้า PlayerPrefs.DeleteAll(); นะครับ!)
             PlayerPrefs.DeleteAll();
             LoadGameData();
         }
@@ -51,36 +59,71 @@ public class GameManager : MonoBehaviour
         globalCoins = PlayerPrefs.GetInt("GlobalCoins", 0);
     }
 
-    // ฟังก์ชันนี้จะถูกเรียกตอนที่กบเขียวตาย
+    public void AddCoins(int amount, string coinID)
+    {
+        sessionCoins += amount;
+        if (!string.IsNullOrEmpty(coinID) && !collectedCoinsInSession.Contains(coinID))
+        {
+            collectedCoinsInSession.Add(coinID);
+        }
+    }
+
+    public bool IsCoinCollected(string coinID)
+    {
+        return collectedCoinsInSession.Contains(coinID);
+    }
+
+    public int GetTotalCoinsForUI()
+    {
+        return globalCoins + sessionCoins;
+    }
+
+    public void DropWallet()
+    {
+        sessionCoins = 0;
+        collectedCoinsInSession.Clear();
+    }
+
+    public void DepositCoinsToSafe()
+    {
+        globalCoins += sessionCoins;
+        sessionCoins = 0;
+        collectedCoinsInSession.Clear();
+
+        PlayerPrefs.SetInt("GlobalCoins", globalCoins);
+        PlayerPrefs.Save();
+    }
+
+    // 🟢 ระบบล้างด่านสุดแกร่งที่อัปเกรดแล้ว
     public void ResetStateOnDeath()
     {
-        // 1. ปิดสวิตช์วาร์ปกลับจากมินิเกมให้ชัวร์ 100%
         isReturningFromMiniGame = false;
+        hasCheckpoint = false;
+        lastCheckpointPos = Vector2.zero;
 
-        // 2. แบ็คอัพดาวไว้ก่อน (เวลาตายดาวจะได้ไม่หาย)
+        DropWallet(); // ทำกระเป๋าตังค์หก และรีเซ็ตเหรียญบนแมพ
+
+        // 🟢 1. สำรองข้อมูลสำคัญระดับ Global ไว้ก่อน (เพื่อไม่ให้หายตอน DeleteAll)
         int keepStars = totalStars;
         int keepCoins = globalCoins;
+        int keepLevelReached = PlayerPrefs.GetInt("LevelReached", 1);
+        int keepExtraHeart = PlayerPrefs.GetInt("Item_ExtraHeart", 0);
 
-        // 3. ล้างเซฟทั้งหมด (รีเซ็ตหีบ, มอนสเตอร์, มินิเกม)
+        // 🟢 2. ล้างประวัติภายในด่านนี้ทิ้งทั้งหมด (หีบกลับมาปิด, มอนสเตอร์เกิดใหม่, ควิซรีเซ็ต)
         PlayerPrefs.DeleteAll();
 
-        // 4. คืนค่าดาวกลับเข้าไป
+        // 🟢 3. คืนค่าข้อมูลสำคัญกลับเข้าสู่ระบบ
         totalStars = keepStars;
         PlayerPrefs.SetInt("TotalStars", totalStars);
-        PlayerPrefs.Save();
 
         globalCoins = keepCoins;
         PlayerPrefs.SetInt("GlobalCoins", globalCoins);
 
-        Debug.Log("ล้างข้อมูลตอนตายเรียบร้อย! เริ่มด่านใหม่แบบคลีนๆ");
-    }
+        PlayerPrefs.SetInt("LevelReached", keepLevelReached);
+        PlayerPrefs.SetInt("Item_ExtraHeart", keepExtraHeart);
 
-    public void AddCoins(int amount)
-    {
-        globalCoins += amount; // บวกเงินเพิ่มเข้าไป
-        PlayerPrefs.SetInt("GlobalCoins", globalCoins); // เซฟลงสมองเกมทันที
         PlayerPrefs.Save();
 
-        Debug.Log("เก็บเหรียญได้! ยอดรวมในบัญชีตอนนี้: " + globalCoins);
+        Debug.Log("กวาดล้างข้อมูลด่านเรียบร้อย! หีบสมบัติ/มอนสเตอร์ ถูกรีเซ็ต 100%");
     }
 }

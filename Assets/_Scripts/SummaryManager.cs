@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class SummaryManager : MonoBehaviour
 {
+    [Header("ด่านปัจจุบัน (ใช้เพื่อปลดล็อกด่านถัดไป)")]
+    public int currentLevelIndex = 1; // 🟢 ตั้งค่าใน Inspector ว่านี่คือด่านที่เท่าไหร่ (ด่าน 1 ใส่ 1)
+
     [Header("UI Panels & Buttons")]
     public GameObject stageClearPanel;
     public GameObject buttonMenu;
@@ -14,6 +17,7 @@ public class SummaryManager : MonoBehaviour
     [Header("UI Texts & Values")]
     public Text timeText;
     public Text ammoText;
+    public Text coinCollectedText; // 🟢 เพิ่มช่องนี้ไว้ลาก Text เหรียญมาใส่
     public Text resultText;
     public GameObject[] heartIcons;
 
@@ -25,30 +29,17 @@ public class SummaryManager : MonoBehaviour
     public Text q3AttemptText;
     public GameObject q3FilledStar;
 
-    [Header("Overall 4-Star System (แบบสลับก้อน GameObject)")]
+    [Header("Overall 4-Star System")]
     public float totalLevelTime = 300f;
+    public GameObject starPassParent, starPassFilled;
+    public GameObject starHealthParent, starHealthFilled;
+    public GameObject starTimeParent, starTimeFilled;
+    public GameObject starQuizParent, starQuizFilled;
 
-    // ดาวดวงที่ 1 (ผ่านด่าน)
-    public GameObject starPassParent;
-    public GameObject starPassFilled;
-
-    // ดาวดวงที่ 2 (หัวใจ)
-    public GameObject starHealthParent;
-    public GameObject starHealthFilled;
-
-    // ดาวดวงที่ 3 (เวลา)
-    public GameObject starTimeParent;
-    public GameObject starTimeFilled;
-
-    // ดาวดวงที่ 4 (ควิซ)
-    public GameObject starQuizParent;
-    public GameObject starQuizFilled;
-
-    // 🟢 เพิ่มส่วนนี้เข้ามาให้ปรับตั้งค่าเงื่อนไขได้จาก Unity เลย!
-    [Header("Star Conditions (ตั้งค่าเงื่อนไขการได้ดาว)")]
-    public int requiredHearts = 3; // เลือดขั้นต่ำที่ต้องเหลือ (เช่น ตั้งไว้ 3)
-    public float requiredTimePercent = 0.2f; // เปอร์เซ็นต์เวลาที่ต้องเหลือ (0.2 = 20%)
-    public int requiredQuizPass = 2; // จำนวนข้อควิซที่ต้องผ่าน (ได้ดาวมินิเกม)
+    [Header("Star Conditions")]
+    public int requiredHearts = 3;
+    public float requiredTimePercent = 0.2f;
+    public int requiredQuizPass = 2;
 
     [Header("System References")]
     public HealthSystem playerHealth;
@@ -73,11 +64,19 @@ public class SummaryManager : MonoBehaviour
         if (buttonNextLV != null) buttonNextLV.SetActive(false);
         if (resultText != null) resultText.gameObject.SetActive(false);
 
-        // ซ่อนก้อนดาวทั้งหมดไว้ก่อน
         if (starPassParent != null) starPassParent.SetActive(false);
         if (starHealthParent != null) starHealthParent.SetActive(false);
         if (starTimeParent != null) starTimeParent.SetActive(false);
         if (starQuizParent != null) starQuizParent.SetActive(false);
+
+        // 🟢 [ปลดล็อกด่านถัดไป]
+        int highestLevelReached = PlayerPrefs.GetInt("LevelReached", 1);
+        if (currentLevelIndex + 1 > highestLevelReached)
+        {
+            PlayerPrefs.SetInt("LevelReached", currentLevelIndex + 1);
+            PlayerPrefs.Save();
+            Debug.Log("ปลดล็อกด่าน " + (currentLevelIndex + 1) + " เรียบร้อย!");
+        }
 
         StartCoroutine(CalculateAndShowSummary());
     }
@@ -92,6 +91,12 @@ public class SummaryManager : MonoBehaviour
         if (timeText != null) timeText.text = timeInt.ToString() + " s";
         if (ammoText != null) ammoText.text = "x" + currentAmmo.ToString();
 
+        // 🟢 โชว์เหรียญที่เก็บได้ในตานี้
+        if (coinCollectedText != null && GameManager.Instance != null)
+        {
+            coinCollectedText.text = "x" + GameManager.Instance.sessionCoins.ToString();
+        }
+
         for (int i = 0; i < heartIcons.Length; i++)
         {
             if (heartIcons[i] != null) heartIcons[i].SetActive(i < currentHearts);
@@ -103,15 +108,12 @@ public class SummaryManager : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(0.5f);
 
-        // --- เตรียมจัดเรียงดาว 4 ดวง ---
         List<GameObject> passedStars = new List<GameObject>();
         List<GameObject> failedStars = new List<GameObject>();
 
-        // 1. ดาวผ่านด่าน (ได้เสมอ)
         if (starPassFilled != null) starPassFilled.SetActive(true);
         passedStars.Add(starPassParent);
 
-        // 2. ดาวหัวใจ (เช็คจากค่าที่ตั้งไว้)
         if (currentHearts >= requiredHearts)
         {
             if (starHealthFilled != null) starHealthFilled.SetActive(true);
@@ -123,7 +125,6 @@ public class SummaryManager : MonoBehaviour
             failedStars.Add(starHealthParent);
         }
 
-        // 3. ดาวเวลา (เช็คจากเปอร์เซ็นต์ที่ตั้งไว้)
         float requiredTime = totalLevelTime * requiredTimePercent;
         if (currentTime >= requiredTime)
         {
@@ -136,7 +137,6 @@ public class SummaryManager : MonoBehaviour
             failedStars.Add(starTimeParent);
         }
 
-        // 4. ดาวควิซ (เช็คจากจำนวนข้อที่ตั้งไว้)
         int quizStars = GameManager.Instance != null ? GameManager.Instance.totalStars : 0;
         if (quizStars >= requiredQuizPass)
         {
@@ -149,12 +149,10 @@ public class SummaryManager : MonoBehaviour
             failedStars.Add(starQuizParent);
         }
 
-        // เอาก้อนที่ผ่าน ขึ้นก่อนก้อนที่พลาด
         List<GameObject> finalOrder = new List<GameObject>();
         finalOrder.AddRange(passedStars);
         finalOrder.AddRange(failedStars);
 
-        // --- แอนิเมชันโชว์ทีละดวง พร้อมสลับที่ ---
         for (int i = 0; i < finalOrder.Count; i++)
         {
             if (finalOrder[i] != null)
@@ -184,19 +182,38 @@ public class SummaryManager : MonoBehaviour
     private void UpdateMiniGameResultUI(string qID, Text attemptText, GameObject filledStarObj)
     {
         int attempts = PlayerPrefs.GetInt(qID + "_Attempts", 1);
-        if (attemptText != null) attemptText.text = attempts + " Attempt" + (attempts > 1 ? "s" : "");
-        if (filledStarObj != null) filledStarObj.SetActive(attempts <= 2);
+
+        if (attemptText != null)
+        {
+            attemptText.text = attempts + " Attempt" + (attempts > 1 ? "s" : "");
+        }
+
+        if (filledStarObj != null)
+        {
+            // 🟢 ดาวเขียวจะโชว์ก็ต่อเมื่อพยายามไม่เกิน 2 ครั้ง ถ้าเกิน 2 (คือ 3) ดาวเขียวจะถูกปิดไป
+            filledStarObj.SetActive(attempts <= 2);
+        }
     }
 
     public void OnClickMenu()
     {
         Time.timeScale = 1f;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.DepositCoinsToSafe();
+            GameManager.Instance.ResetStateOnDeath();
+        }
         SceneManager.LoadScene(menuSceneName);
     }
 
     public void OnClickNextLevel()
     {
         Time.timeScale = 1f;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.DepositCoinsToSafe();
+            GameManager.Instance.ResetStateOnDeath();
+        }
         SceneManager.LoadScene(nextLevelSceneName);
     }
 }

@@ -1,17 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement; // ต้องใช้ตัวนี้เพื่อดึงเลขฉาก
+using UnityEngine.SceneManagement;
 
 public class CoinSpawner : MonoBehaviour
 {
     public int targetTotalCoins = 80;
-
     public GameObject smallCoinPrefab;
     public int smallCoinValue = 1;
-
     public GameObject bigCoinPrefab;
     public int bigCoinValue = 3;
-
     public List<Transform> spawnPoints;
 
     void Start()
@@ -22,11 +19,8 @@ public class CoinSpawner : MonoBehaviour
     private void SpawnCoinsToMatchTarget()
     {
         int currentSpawnedValue = 0;
-
-        // 🟢 ล็อคผลการสุ่ม (Seed) ให้เหมือนเดิมทุกครั้งที่โหลดซีนด่านนี้ เหรียญจะได้ไม่ย้ายที่!
         Random.InitState(SceneManager.GetActiveScene().buildIndex);
 
-        // สลับตำแหน่งแบบคงที่
         for (int i = 0; i < spawnPoints.Count; i++)
         {
             Transform temp = spawnPoints[i];
@@ -65,25 +59,23 @@ public class CoinSpawner : MonoBehaviour
 
             if (prefabToSpawn != null)
             {
-                // กินโควต้ายอดรวมไว้ก่อน
                 currentSpawnedValue += valueToAdd;
 
-                // 🟢 เช็คประวัติ! ถ้ายังไม่เคยเก็บ ค่อยเสกตัวตนของมันออกมา
-                if (PlayerPrefs.GetInt("CoinCollected_" + pt.name, 0) == 0)
+                // 🟢 เช็คว่า GameManager จำได้ไหมว่าเหรียญนี้โดนเก็บไปแล้วในรอบนี้
+                if (GameManager.Instance != null && GameManager.Instance.IsCoinCollected(pt.name))
                 {
-                    GameObject coinObj = Instantiate(prefabToSpawn, pt.position, Quaternion.identity);
+                    continue; // ถ้าเก็บไปแล้ว ให้ข้าม ไม่ต้องเสก!
+                }
 
-                    // แปะป้ายชื่อ (ID) ให้เหรียญ โดยใช้ชื่อของจุดเกิด (เช่น "SpawnPoint (5)")
-                    Coin coinScript = coinObj.GetComponent<Coin>();
-                    if (coinScript != null)
-                    {
-                        coinScript.coinID = pt.name;
-                    }
+                GameObject coinObj = Instantiate(prefabToSpawn, pt.position, Quaternion.identity);
+                Coin coinScript = coinObj.GetComponent<Coin>();
+                if (coinScript != null)
+                {
+                    coinScript.coinID = pt.name;
                 }
             }
         }
 
-        // 🟢 คืนค่าระบบสุ่มให้เป็นอิสระตามเวลาจริง เพื่อไม่ให้กระทบกับระบบอื่นในเกม
         Random.InitState(System.Environment.TickCount);
     }
 }
