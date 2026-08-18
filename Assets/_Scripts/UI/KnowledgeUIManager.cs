@@ -4,23 +4,18 @@ using UnityEngine.UI;
 public class KnowledgeUIManager : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Image knowledgeImageDisplay; 
-    [SerializeField] private Text pageTextDisplay;        
+    [SerializeField] private Image knowledgeImageDisplay;
+    [SerializeField] private Text pageTextDisplay;
 
     [Header("Button Objects to Hide/Show")]
-    [SerializeField] private GameObject nextButtonObject;     
-    [SerializeField] private GameObject previousButtonObject; 
+    [SerializeField] private GameObject nextButtonObject;
+    [SerializeField] private GameObject previousButtonObject;
 
     [Header("Knowledge Contents")]
-    [SerializeField] private Sprite[] knowledgePages;    
+    // 🟢 แก้บรรทัดนี้เป็น public เพื่อให้สมุดไอคอนเข้ามาก็อปปี้รูปไปโชว์ได้
+    public Sprite[] knowledgePages;
 
     private int currentPageIndex = 0;
-    private Treasure_Act treasureScript;
-
-    void Start()
-    {
-        treasureScript = Object.FindFirstObjectByType<Treasure_Act>();
-    }
 
     void OnEnable()
     {
@@ -67,26 +62,12 @@ public class KnowledgeUIManager : MonoBehaviour
     {
         if (previousButtonObject != null)
         {
-            if (currentPageIndex == 0)
-            {
-                previousButtonObject.SetActive(false);
-            }
-            else
-            {
-                previousButtonObject.SetActive(true);
-            }
+            previousButtonObject.SetActive(currentPageIndex != 0);
         }
 
         if (nextButtonObject != null)
         {
-            if (currentPageIndex == knowledgePages.Length - 1)
-            {
-                nextButtonObject.SetActive(false);
-            }
-            else
-            {
-                nextButtonObject.SetActive(true);
-            }
+            nextButtonObject.SetActive(currentPageIndex != knowledgePages.Length - 1);
         }
     }
 }

@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 🟢 1. เปลี่ยนชื่อ Class ให้ตรงกับชื่อไฟล์ใหม่ เพื่อไม่ให้ซ้ำกับระบบหลัก
-public class TreasureBoxController : MonoBehaviour 
+public class TreasureBoxController : MonoBehaviour
 {
     [Header("Save Settings")]
     public string chestID = "Chest_1";
@@ -12,13 +11,14 @@ public class TreasureBoxController : MonoBehaviour
 
     private bool playerInside = false;
     private bool isOpened = false;
-    private bool hasRead = false; 
+    private bool hasRead = false;
 
     [Header("UI Settings")]
     [SerializeField] private GameObject notificationPanel;
     [SerializeField] private Text hintText;
     [SerializeField] private GameObject KnowledgePanel;
-    [SerializeField] private GameObject bookPage; 
+
+    // 🟢 ลบช่อง bookPage เก่าทิ้งไปแล้วนะครับ ไม่ต้องลากใส่แล้ว!
 
     [Header("Quiz Point Settings")]
     [SerializeField] private GameObject[] questionMarkPoints;
@@ -33,21 +33,26 @@ public class TreasureBoxController : MonoBehaviour
         if (notificationPanel != null) notificationPanel.SetActive(false);
         if (KnowledgePanel != null) KnowledgePanel.SetActive(false);
 
-        if (PlayerPrefs.GetInt(chestID + "_isOpened", 0) == 1)
+        if (SaveManager.IsChestOpened(chestID))
         {
             isOpened = true;
             anim.Play("Opened");
             anim.SetInteger("treasureState", 4);
         }
 
-        if (PlayerPrefs.GetInt(chestID + "_hasRead", 0) == 1)
+        if (SaveManager.IsChestRead(chestID))
         {
             hasRead = true;
             ShowQuestionMarks();
 
-            if (InGameKnowledgeBook.Instance != null && bookPage != null)
+            // 🟢 ตอนเปิดเกมมาเช็คว่าเคยอ่านหีบนี้แล้ว ให้โยนรูปเข้าสมุดไว้เลย
+            if (InGameKnowledgeBook.Instance != null && KnowledgePanel != null)
             {
-                InGameKnowledgeBook.Instance.AddPage(bookPage);
+                KnowledgeUIManager uiManager = KnowledgePanel.GetComponent<KnowledgeUIManager>();
+                if (uiManager != null && uiManager.knowledgePages != null)
+                {
+                    InGameKnowledgeBook.Instance.AddPages(uiManager.knowledgePages);
+                }
             }
         }
         else
@@ -79,9 +84,7 @@ public class TreasureBoxController : MonoBehaviour
     {
         isOpened = true;
         anim.SetInteger("treasureState", 3);
-
-        PlayerPrefs.SetInt(chestID + "_isOpened", 1);
-        PlayerPrefs.Save();
+        SaveManager.SetChestOpened(chestID);
 
         if (hintText != null)
         {
@@ -120,7 +123,7 @@ public class TreasureBoxController : MonoBehaviour
 
             if (notificationPanel != null) notificationPanel.SetActive(false);
             if (KnowledgePanel != null) KnowledgePanel.SetActive(false);
-            
+
             Player_canMove();
 
             if (!isOpened) anim.SetInteger("treasureState", 0);
@@ -139,13 +142,17 @@ public class TreasureBoxController : MonoBehaviour
         if (!hasRead)
         {
             hasRead = true;
-            PlayerPrefs.SetInt(chestID + "_hasRead", 1);
-            PlayerPrefs.Save();
+            SaveManager.SetChestRead(chestID);
             ShowQuestionMarks();
 
-            if (InGameKnowledgeBook.Instance != null && bookPage != null)
+            // 🟢 ตอนอ่านหีบครั้งแรก ให้กวาดรูปจากหีบ ส่งเข้าสมุดรวมทั้งหมดเลย
+            if (InGameKnowledgeBook.Instance != null && KnowledgePanel != null)
             {
-                InGameKnowledgeBook.Instance.AddPage(bookPage);
+                KnowledgeUIManager uiManager = KnowledgePanel.GetComponent<KnowledgeUIManager>();
+                if (uiManager != null && uiManager.knowledgePages != null)
+                {
+                    InGameKnowledgeBook.Instance.AddPages(uiManager.knowledgePages);
+                }
             }
         }
     }
@@ -175,17 +182,9 @@ public class TreasureBoxController : MonoBehaviour
             if (qp != null)
             {
                 QuestionPoint qScript = qp.GetComponent<QuestionPoint>();
-
                 if (qScript != null)
                 {
-                    if (PlayerPrefs.GetInt(qScript.questionID + "_Passed", 0) == 0)
-                    {
-                        qp.SetActive(true);
-                    }
-                    else
-                    {
-                        qp.SetActive(false);
-                    }
+                    qp.SetActive(!SaveManager.IsMiniGamePassed(qScript.questionID));
                 }
                 else
                 {

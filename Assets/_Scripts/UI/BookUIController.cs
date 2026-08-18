@@ -1,11 +1,10 @@
 using UnityEngine;
-using UnityEngine.UI; // ต้องใช้เพื่อควบคุม Button
+using UnityEngine.UI;
 
 public class BookUIController : MonoBehaviour
 {
-    [Header("Settings")]
-    public string chestID = "Chest_1"; // ชื่อต้องตรงกับหีบที่จะปลดล็อก
-    public GameObject knowledgePanel; // ลากหน้าต่าง Knowledge มาใส่ช่องนี้
+    [Header("ใส่ ID หีบทั้งหมดในด่าน (เช่น Chest_1, Chest_2, Chest_3)")]
+    public string[] chestIDs; // 🟢 เปลี่ยนจากตัวแปรเดี่ยว เป็น Array เพื่อรับได้หลายชื่อ
 
     private Animator anim;
     private Button btn;
@@ -16,37 +15,41 @@ public class BookUIController : MonoBehaviour
         anim = GetComponent<Animator>();
         btn = GetComponent<Button>();
 
-        // ผูกฟังก์ชันเข้ากับการกดปุ่ม
         btn.onClick.AddListener(OnBookClicked);
     }
 
     void Update()
     {
-        // เช็คตลอดเวลาว่าหีบถูกเปิดหรือยัง และถ้ายังไม่เคยเปลี่ยนสถานะปุ่ม ให้ทำการเปลี่ยน
-        if (!isUnlocked && PlayerPrefs.GetInt(chestID + "_isOpened", 0) == 1)
+        // ถ้าปุ่มยังไม่ถูกปลดล็อก ให้คอยเช็คว่ามีหีบใบไหนโดนเปิดหรือยัง
+        if (!isUnlocked)
         {
-            isUnlocked = true;
-            if (anim != null)
+            foreach (string id in chestIDs)
             {
-                anim.Play("Book_Unlocked"); // สั่งเล่นท่าปลดล็อก (ชื่อต้องตรงกับใน Animator)
+                if (SaveManager.IsChestOpened(id))
+                {
+                    isUnlocked = true; // ปลดล็อกปุ่ม
+                    if (anim != null)
+                    {
+                        anim.Play("Book_Unlocked"); // เล่นแอนิเมชันปุ่มเด้ง
+                    }
+                    break; // ถ้าเจอหีบเปิดแล้ว 1 ใบ ก็ให้หยุดเช็คใบอื่นได้เลย
+                }
             }
         }
     }
 
-    // ฟังก์ชันนี้จะทำงานเมื่อผู้เล่นคลิกปุ่ม
     void OnBookClicked()
     {
-        if (isUnlocked) // ถ้าปลดล็อกแล้ว ให้เปิดหน้าต่างความรู้
+        if (isUnlocked)
         {
-            if (knowledgePanel != null)
+            if (InGameKnowledgeBook.Instance != null)
             {
-                knowledgePanel.SetActive(true);
-                // Tip: ถ้าอยากให้เกมหยุดชั่วคราวตอนอ่านหนังสือ สามารถใส่ Time.timeScale = 0f; ได้ครับ
+                InGameKnowledgeBook.Instance.OpenBook();
             }
         }
-        else // ถ้ายังไม่ปลดล็อก
+        else
         {
-            Debug.Log("หนังสือยังถูกล็อกอยู่! ต้องไปเปิดหีบก่อน");
+            Debug.Log("หนังสือยังถูกล็อกอยู่! ต้องไปเปิดหีบอย่างน้อย 1 ใบก่อน");
         }
     }
 }

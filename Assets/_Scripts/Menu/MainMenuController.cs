@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement; // 🟢 สำคัญมาก! ต้องมีบรรทัดนี้ถึงจะสั่งเปลี่ยนซีนได้
 using UnityEngine.UI;
 
-public class MainMenuManager : MonoBehaviour
+public class MainMenuController : MonoBehaviour
 {
     [Header("ใส่ชื่อซีนให้ตรงกับเป๊ะๆ (ระวังตัวพิมพ์เล็ก-ใหญ่)")]
     public string levelSelectSceneName = "LevelSelect"; // ชื่อซีนหน้าเลือกด่าน

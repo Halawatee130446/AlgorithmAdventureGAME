@@ -4,16 +4,16 @@ using UnityEngine.UI;
 
 public class InGameKnowledgeBook : MonoBehaviour
 {
-    public static InGameKnowledgeBook Instance; // 🟢 ทำให้หีบทุกใบมองเห็นสมุดเล่มนี้ง่ายๆ
+    public static InGameKnowledgeBook Instance;
 
     [Header("UI สมุดรวม")]
-    public GameObject bookPanel; // หน้าต่างสมุดรวม
-    public Text pageNumberText;  // ตัวหนังสือบอกเลขหน้า (เช่น 1/3)
-    public GameObject nextButton; // ปุ่มหน้าถัดไป
-    public GameObject prevButton; // ปุ่มหน้าก่อนหน้า
+    public GameObject bookPanel;
+    public Image bookImageDisplay;
+    public Text pageNumberText;
+    public GameObject nextButton;
+    public GameObject prevButton;
 
-    // 🟢 ตัวแปรเก็บหน้ากระดาษ (เรียงตามลำดับที่หีบส่งข้อมูลมาให้)
-    private List<GameObject> collectedPages = new List<GameObject>();
+    private List<Sprite> collectedPages = new List<Sprite>();
     private int currentPage = 0;
 
     void Awake()
@@ -22,83 +22,88 @@ public class InGameKnowledgeBook : MonoBehaviour
         if (bookPanel != null) bookPanel.SetActive(false);
     }
 
-    // 🟢 ฟังก์ชันนี้หีบสมบัติจะเป็นคนเรียกใช้ เพื่อเอาหน้ากระดาษมายัดใส่สมุด
-    public void AddPage(GameObject page)
+    public void AddPages(Sprite[] pages)
     {
-        if (!collectedPages.Contains(page))
+        foreach (Sprite page in pages)
         {
-            collectedPages.Add(page);
-            page.SetActive(false); // ซ่อนไว้ก่อน ค่อยให้โชว์ตอนเปิดสมุด
+            if (!collectedPages.Contains(page))
+            {
+                collectedPages.Add(page);
+            }
         }
     }
 
-    // --- ฟังก์ชันสำหรับปุ่มไอคอนสมุด (เปิดสมุด) ---
     public void OpenBook()
     {
-        if (collectedPages.Count == 0)
-        {
-            Debug.Log("ยังไม่ได้อ่านความรู้เลย สมุดยังว่างเปล่า!");
-            return; // ถ้ายังไม่มีหน้ากระดาษ จะไม่ยอมให้เปิดสมุด (หรือคุณจะใส่เสียง Error ก็ได้)
-        }
+        if (collectedPages.Count == 0) return;
 
         bookPanel.SetActive(true);
-        currentPage = 0; // เปิดมาหน้าแรกเสมอ
-        Time.timeScale = 0f; // ฟรีซเวลาเกม
+        currentPage = 0;
+        Time.timeScale = 0f;
         UpdateBookUI();
     }
 
-    // --- ฟังก์ชันสำหรับปุ่มกากบาทของสมุด (ปิดสมุด) ---
     public void CloseBook()
     {
         bookPanel.SetActive(false);
-        Time.timeScale = 1f; // คืนเวลาเกม
+        Time.timeScale = 1f;
 
-        // ซ่อนทุกหน้าเตรียมไว้สำหรับการเปิดครั้งหน้า
-        foreach (GameObject page in collectedPages)
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
         {
-            if (page != null) page.SetActive(false);
+            PlayerController pc = player.GetComponent<PlayerController>();
+            if (pc != null) pc.enabled = true;
+
+            PlayerShooting ps = player.GetComponent<PlayerShooting>();
+            if (ps != null) ps.enabled = true;
         }
     }
 
+    // 🟢 แก้ไข: ถ้าอยู่หน้าสุดท้ายแล้ว จะกด Next ไม่ได้
     public void NextPage()
     {
-        if (collectedPages.Count > 1)
+        if (currentPage < collectedPages.Count - 1)
         {
             currentPage++;
-            if (currentPage >= collectedPages.Count) currentPage = 0;
             UpdateBookUI();
         }
     }
 
+    // 🟢 แก้ไข: ถ้าอยู่หน้าแรกแล้ว จะกด Prev ไม่ได้
     public void PrevPage()
     {
-        if (collectedPages.Count > 1)
+        if (currentPage > 0)
         {
             currentPage--;
-            if (currentPage < 0) currentPage = collectedPages.Count - 1;
             UpdateBookUI();
         }
     }
 
     private void UpdateBookUI()
     {
-        // โชว์เฉพาะหน้าที่ตรงกับ currentPage
-        for (int i = 0; i < collectedPages.Count; i++)
+        if (collectedPages.Count == 0) return;
+
+        // อัปเดตการแสดงรูปภาพ
+        if (bookImageDisplay != null)
         {
-            if (collectedPages[i] != null)
-            {
-                collectedPages[i].SetActive(i == currentPage);
-            }
+            bookImageDisplay.sprite = collectedPages[currentPage];
         }
 
+        // อัปเดตเลขหน้า
         if (pageNumberText != null)
         {
             pageNumberText.text = (currentPage + 1) + "/" + collectedPages.Count;
         }
 
-        // ถ้ามีแค่หน้าเดียว ให้ซ่อนปุ่มเลื่อนหน้าซ้ายขวาไปเลย
-        bool hasMultiple = collectedPages.Count > 1;
-        if (nextButton != null) nextButton.SetActive(hasMultiple);
-        if (prevButton != null) prevButton.SetActive(hasMultiple);
+        // 🟢 ระบบจัดการปุ่มอัจฉริยะ (หน้าแรกซ่อนปุ่มย้อน, หน้าสุดท้ายซ่อนปุ่มถัดไป)
+        if (prevButton != null)
+        {
+            prevButton.SetActive(currentPage > 0);
+        }
+
+        if (nextButton != null)
+        {
+            nextButton.SetActive(currentPage < collectedPages.Count - 1);
+        }
     }
 }
