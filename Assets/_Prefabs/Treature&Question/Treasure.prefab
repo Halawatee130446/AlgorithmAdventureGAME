@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1631154981729065669}
   - component: {fileID: 2612384868939129644}
   - component: {fileID: 1126990956481041550}
-  - component: {fileID: 7367294595372866830}
+  - component: {fileID: 4216667714930351142}
   m_Layer: 0
   m_Name: Treasure
   m_TagString: Treasure
@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5681882844551455200}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -45.489025, y: -15.369431, z: 0.05309639}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -74,7 +74,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1347903913
-  m_SortingLayer: 9
+  m_SortingLayer: 13
   m_SortingOrder: 0
   m_Sprite: {fileID: 1627353786, guid: de69fcf0c8b217a4eaf3a3c1aad633a6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -153,7 +153,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.6864982, y: 1.3721019}
   m_EdgeRadius: 0
---- !u!114 &7367294595372866830
+--- !u!114 &4216667714930351142
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -162,14 +162,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 5681882844551455200}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a070339c7ca5f040b9e9c84778e6379, type: 3}
+  m_Script: {fileID: 11500000, guid: 1972e16e8652550438a959b5b4359d6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   chestID: Chest_1
   notificationPanel: {fileID: 0}
   hintText: {fileID: 0}
   KnowledgePanel: {fileID: 0}
+  bookPage: {fileID: 0}
   questionMarkPoints:
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}

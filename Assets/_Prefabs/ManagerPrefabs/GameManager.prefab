@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3331610809281988839}
-  - component: {fileID: 7527559159207076720}
+  - component: {fileID: 1234953006702674594}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -25,14 +25,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4377132989413448392}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -326.03622, y: -98.22269, z: 1.920167}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7527559159207076720
+--- !u!114 &1234953006702674594
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,13 +41,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 4377132989413448392}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1972e16e8652550438a959b5b4359d6f, type: 3}
+  m_Script: {fileID: 11500000, guid: a61380bf234c9da45b53022673c6a081, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   totalStars: 0
   globalCoins: 0
   sessionCoins: 0
-  isReturningFromMiniGame: 1
+  isReturningFromMiniGame: 0
   returnPosition: {x: 0, y: 0}
   savedHealth: 0
   savedAmmo: 0

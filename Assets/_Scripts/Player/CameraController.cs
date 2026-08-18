@@ -5,7 +5,7 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     [SerializeField] private Transform player;
-    
+
     // สร้างตัวแปรไว้เก็บความสูงเริ่มต้นของกล้อง
     private float initialCameraY;
 
@@ -15,17 +15,12 @@ public class CameraController : MonoBehaviour
         initialCameraY = transform.position.y;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        // แกน X: ขยับตามตัวละครไปทางขวา 3 หน่วยเหมือนเดิม
-        float newX = player.position.x + 3f; 
-        
-        // แกน Y: ใช้ความสูงเริ่มต้นตลอดเวลา ตัวละครจะโดดสูงแค่ไหน กล้องก็จะไม่ขยับขึ้น-ลง
-        float newY = initialCameraY; 
-        
-        // แกน Z: ใช้ค่าเดิมของกล้อง
+        float newX = player.position.x + 3f;
+        float newY = initialCameraY;
         float cameraZ = transform.position.z;
-        
+
         transform.position = new Vector3(newX, newY, cameraZ);
     }
 }
